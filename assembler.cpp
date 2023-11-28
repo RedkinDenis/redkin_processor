@@ -149,6 +149,8 @@ int assembler(FILE* out, struct line* data, int nLines)
     for(int i = 0; i < len; i++)
         printf(" %d", buffer[i]);
 
-    //fputs(buffer, out);
-    fprintf(out, "%s", buffer);
+    fputs(buffer, out);
+    //fprintf(out, "%s", buffer);
+
+    //fwrite(buffer, sizeof(int), len, out);
 }
