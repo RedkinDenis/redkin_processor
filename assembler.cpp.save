@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     InputData(&data, read, fsize);
     //printf("out - %s", outName);
 
-    FILE* out = fopen(outName, "wb");
+    FILE* out = fopen(outName, "w");
     if(out == NULL)
     {
         printf("out file open error");
