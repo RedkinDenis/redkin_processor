@@ -1,9 +1,0 @@
-push 5
-push 10
-add
-push 4
-push 1
-sub
-div
-out
-het
