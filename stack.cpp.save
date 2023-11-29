@@ -5,6 +5,8 @@
 
 #include "stack.h"
 
+#define GET_VARIABLE_NAME(variable) #variable
+
 /*int main()
 {
     size_t cpc = 5;
@@ -20,20 +22,19 @@
     printf("\ndata[0] - %d\ncapacity - %d" ,stk.data[0], stk.capacity);
 }*/
 
-void stack_dump(struct Stack* stk, int LINE, const char* stk_name)
+void stack_dump(struct Stack* stk, int LINE, )
 {
     printf("\n------DUMP_BEGIN------\n");
-    printf("\nstack name: %s\n", stk_name);
     printf("\nDUMP was called from line: %d\n", LINE);
     printf("\nstack adress: %d\n", stk);
     printf("stack->data adress: %d\n", stk->data);
     printf("capacity - %d\nsize - %d\nstack:\n", stk->capacity, stk->size);
     for(int i = 0; i < stk->size; i++)
         printf("%d ", stk->data[i]);
-    printf("* ");
+    printf(" * ");
     for(int i = stk->size; i < stk->capacity; i++)
         printf("%d ", stk->data[i]);
-
+                                                // печатать адрес, закидывать позицию откуда вызвана и все это через дефайн.
     printf("\n-------DUMP_END-------");
 }
 

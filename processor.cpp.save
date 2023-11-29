@@ -8,22 +8,24 @@
 #include "stack.h"
 #include "encoding.h"
 
+#define PROC_DUMP(proc) proc_dump(&proc, __LINE__, GET_VARIABLE_NAME(proc));
+
 struct processor
 {
-    int* data = {};
+    char* data = {};
     int ip = 0;
-    int ax  = 0, bx = 0, cx = 0, dx = 0;
+    char ax  = 0, bx = 0, cx = 0, dx = 0;
 };
 
 void fill_proc(struct processor* proc, FILE* read, int fsize);
 
-void proc_dump(struct processor* proc);
+void proc_dump(struct processor* proc, int LINE, const char* proc_name);
 
 void proc(struct processor* stk);
 
 int main(int argc, char* argv[])
 {
-    char* inpName = (char*)"byte_code1.txt";
+    char* inpName = (char*)"byte_code1.bin";
 
     if(argc == 2)
         inpName = argv[1];
@@ -44,9 +46,9 @@ int main(int argc, char* argv[])
 
     fill_proc(&processor, read, fsize);
 
-    proc_dump(&processor);
+    //proc_dump(&processor);
 
-    //proc(&processor);
+    proc(&processor);
 }
 
 void proc(struct processor* proc)
@@ -54,58 +56,53 @@ void proc(struct processor* proc)
     struct Stack stk = {};
     stack_ctor(&stk, 20);
 
-    int x1 = 0, x2 = 0, x = 0;
+    char x1 = 0, x2 = 0;
+    char x = 0;
 
     while(proc->data[proc->ip] != 0)   // флаг на конец
     {
-        switch(proc->data[proc->ip])
+        switch((int)(proc->data[proc->ip]))
         {
             case PUSH:
                 stack_push(&stk, &(proc->data[proc->ip + 1]));
                 proc->ip += 2;
-                /*printf("input\n");*/
                 break;
             case ADD:
-                x1 = *stack_pop(&stk);
-                x2 = *stack_pop(&stk);
+                stack_pop(&stk, &x1);
+                stack_pop(&stk, &x2);
                 proc->ip += 1;
                 x = x1 + x2;
                 stack_push(&stk, &x);
-                /*printf("add: %d\n", x);*/
                 break;
             case SUB:
-                x1 = *stack_pop(&stk);
-                x2 = *stack_pop(&stk);
+                stack_pop(&stk, &x1);
+                stack_pop(&stk, &x2);
                 x = x2 - x1;
                 proc->ip += 1;
                 stack_push(&stk, &x);
-                /*printf("sub: %d\n", x);*/
                 break;
             case DIV:
-                x1 = *stack_pop(&stk);
-                x2 = *stack_pop(&stk);
+                stack_pop(&stk, &x1);
+                stack_pop(&stk, &x2);
                 proc->ip += 1;
                 x = x2 / x1;
                 stack_push(&stk, &x);
-                /*printf("div: %d\n", x);*/
-                break;
-            case OUT:
-                x = *stack_pop(&stk);
-                proc->ip += 1;
-                printf("\nresult - %d\n", x);
-                /*printf("return\n");*/
-                break;
-            case HET:
-                /*printf("break\n");*/
-                stack_dtor(&stk);
-                proc->ip += 1;
                 break;
             case MUL:
-                x1 = *stack_pop(&stk);
-                x2 = *stack_pop(&stk);
+                stack_pop(&stk, &x1);
+                stack_pop(&stk, &x2);
                 proc->ip += 1;
                 x = x2 * x1;
                 stack_push(&stk, &x);
+                break;
+            case OUT:
+                stack_pop(&stk, &x);
+                proc->ip += 1;
+                printf("\nresult - %d\n", x);
+                break;
+            case HET:
+                stack_dtor(&stk);
+                proc->ip += 1;
                 break;
             case IN:
                 printf("enter push element");
@@ -117,22 +114,13 @@ void proc(struct processor* proc)
                 proc->ip += 1;
                 switch(proc->data[proc->ip])
                 {
-                    case ax:
-                        stack_push(&stk, &(proc->ax));
-                        proc->ax = 0;
+                    #define REG_NAME(reg) \
+                    case reg:              \
+                        stack_push(&stk, &(proc->reg)); \
+                        proc->reg = 0;                  \
                         break;
-                    case bx:
-                        stack_push(&stk, &(proc->bx));
-                        proc->bx = 0;
-                        break;
-                    case cx:
-                        stack_push(&stk, &(proc->cx));
-                        proc->cx = 0;
-                        break;
-                    case dx:
-                        stack_push(&stk, &(proc->dx));
-                        proc->dx = 0;
-                        break;
+                    #include "registers.h"
+                    #undef REG_NAME
                     default:
                         printf("unknown register name");
                         return;
@@ -144,18 +132,12 @@ void proc(struct processor* proc)
                 proc->ip += 1;
                 switch(proc->data[proc->ip])
                 {
-                    case ax:
-                        proc->ax = *stack_pop(&stk);
+                    #define REG_NAME(reg) \
+                    case reg:              \
+                        stack_pop(&stk, &(proc->reg));  \
                         break;
-                    case bx:
-                        proc->bx = *stack_pop(&stk);
-                        break;
-                    case cx:
-                        proc->cx = *stack_pop(&stk);
-                        break;
-                    case dx:
-                        proc->dx = *stack_pop(&stk);
-                        break;
+                    #include "registers.h"
+                    #undef REG_NAME
                     default:
                         printf("unknown register name");
                         return;
@@ -168,29 +150,31 @@ void proc(struct processor* proc)
                 return;
                 break;
         }
+
+        STACK_DUMP(stk)
+        //PROC_DUMP(*proc)
+        proc_dump(proc, __LINE__, GET_VARIABLE_NAME(*proc));
     }
 }
 
 void fill_proc(struct processor* proc, FILE* read, int fsize)
 {
-    proc->data = (int*)calloc(fsize, sizeof(int));
-    int num = 0;
+    proc->data = (char*)calloc(fsize + 1, sizeof(char));
 
-    /*for(int i = 0; i < fsize; i++)
-    {
-        fscanf(read, "%d", &num);
-        proc->data[i] = (int8_t)num;
-    }*/
-
-    int x = fread(proc->data, 1, fsize, read);
+    int x = fread(proc->data, sizeof(char), fsize, read);
 
     printf("\nread - %d\n", x);
 }
 
-void proc_dump(struct processor* proc)
+void proc_dump(struct processor* proc, int LINE, const char* proc_name)
 {
     printf("\n------PROCESSOR-------");
     printf("\n------DUMP_BEGIN------\n");
+
+    printf("\nprocessor name: %s\n", proc_name);
+    printf("\nDUMP was called from line: %d\n", LINE);
+    printf("\nprocessor adress: %d\n", proc);
+    printf("processor->data adress: %d\n", proc->data);
 
     printf("ax - %d \n"
            "bx - %d \n"
@@ -198,25 +182,17 @@ void proc_dump(struct processor* proc)
            "dx - %d \n", proc->ax, proc->bx, proc->cx, proc->dx);
     int i = 0;
 
-    /*while(proc->data[i] != 0)
+    while(proc->data[i] != 0)
     {
-        printf("%d ", (int8_t)proc->data[i]);
+        printf("%d ", proc->data[i]);
         i++;
-    }*/
+    }
 
-    for(int i = 0; i < 13; i++)
-        printf("%d ", (int8_t)proc->data[i]);
 
     printf("\n");
 
-    /*for(int i = 0; i < proc->ip * 2; i++)
-        printf(" ");
-    printf("|\n");
-
-    for(int i = 0; i < proc->ip * 2 - 3; i++)
-        printf(" ");*/
     printf("ip = %d", proc->ip);
 
-    printf("\n-------DUMP_END-------");
+    printf("\n-------DUMP_END-------\n");
 }
 

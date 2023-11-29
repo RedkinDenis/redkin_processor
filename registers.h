@@ -1,0 +1,4 @@
+REG_NAME(ax)
+REG_NAME(bx)
+REG_NAME(cx)
+REG_NAME(dx)

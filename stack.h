@@ -1,7 +1,11 @@
 #ifndef STACK_H
 #define STACK_H
 
-typedef int elem_t;
+#define GET_VARIABLE_NAME(variable) #variable
+
+#define STACK_DUMP(stk) stack_dump(&stk, __LINE__, GET_VARIABLE_NAME(stk));
+
+typedef char elem_t;
 
 static const elem_t poison = 0;
 
@@ -12,13 +16,13 @@ struct Stack
     size_t size = 0;
 };
 
-elem_t* stack_pop(struct Stack* stk);
+void stack_pop(struct Stack* stk, elem_t* pop_el);
 
-void stack_dump(struct Stack* stk);
+void stack_dump(struct Stack* stk, int LINE, const char* stk_name);
 
 void stack_ctor(struct Stack* stk, size_t capacity);
 
-void stack_push(struct Stack* stk, elem_t* x);
+void stack_push(struct Stack* stk, const elem_t* x);
 
 void stack_dtor(struct Stack* stk);
 

@@ -13,7 +13,7 @@ enum byte_codes comm_det(const char* comm);
 int main(int argc, char* argv[])
 {
     char* inpName = (char*)"word_code.txt";
-    char* outName = (char*)"byte_code1.txt";
+    char* outName = (char*)"byte_code1.bin";
 
     if(argc == 3)
     {
@@ -59,36 +59,12 @@ int main(int argc, char* argv[])
 
 enum byte_codes comm_det(const char* comm)
 {
-    if(strcmp(comm, "push") == 0)
-        return PUSH;
-    if(strcmp(comm, "add") == 0)
-        return ADD;
-    if(strcmp(comm, "sub") == 0)
-        return SUB;
-    if(strcmp(comm, "out") == 0)
-        return OUT;
-    if(strcmp(comm, "het") == 0)
-        return HET;
-    if(strcmp(comm, "div") == 0)
-        return DIV;
-    if(strcmp(comm, "mul") == 0)
-        return MUL;
-    if(strcmp(comm, "in") == 0)
-        return IN;
-    if(strcmp(comm, "rpush") == 0)
-        return RPUSH;
-    if(strcmp(comm, "pop") == 0)
-        return POP;
-    if(strcmp(comm, "ax") == 0)
-        return ax;
-    if(strcmp(comm, "bx") == 0)
-        return bx;
-    if(strcmp(comm, "cx") == 0)
-        return cx;
-    if(strcmp(comm, "dx") == 0)
-        return dx;
+    #define Define_Command(str, enum) \
+    if(strcmp(comm, str) == 0)        \
+        return enum;
+    #include "command.h"
+    #undef Define_Command
     return ERR;
-
 }
 
 int assembler(FILE* out, struct line* data, int nLines)
@@ -149,8 +125,5 @@ int assembler(FILE* out, struct line* data, int nLines)
     for(int i = 0; i < len; i++)
         printf(" %d", buffer[i]);
 
-    fputs(buffer, out);
-    //fprintf(out, "%s", buffer);
-
-    //fwrite(buffer, sizeof(int), len, out);
+    fwrite(buffer, sizeof(char), len, out);
 }
