@@ -59,43 +59,19 @@ int main(int argc, char* argv[])
 
 enum byte_codes comm_det(const char* comm)
 {
-    #define comm_det(str, )
-    
-    if(strcmp(comm, "push") == 0)
-        return PUSH;
-    if(strcmp(comm, "add") == 0)
-        return ADD;
-    if(strcmp(comm, "sub") == 0)
-        return SUB;
-    if(strcmp(comm, "out") == 0)
-        return OUT;
-    if(strcmp(comm, "het") == 0)
-        return HET;
-    if(strcmp(comm, "div") == 0)
-        return DIV;
-    if(strcmp(comm, "mul") == 0)
-        return MUL;
-    if(strcmp(comm, "in") == 0)
-        return IN;
-    if(strcmp(comm, "rpush") == 0)
-        return RPUSH;
-    if(strcmp(comm, "pop") == 0)
-        return POP;
-    if(strcmp(comm, "ax") == 0)
-        return ax;
-    if(strcmp(comm, "bx") == 0)
-        return bx;
-    if(strcmp(comm, "cx") == 0)
-        return cx;
-    if(strcmp(comm, "dx") == 0)
-        return dx;
+    #define Define_Command(str, enum) \
+    if(strcmp(comm, str) == 0)        \
+        return enum;
+    #include "command.h"
+    #include "registers.h"
+    #undef Define_Command
     return ERR;
 }
 
 int assembler(FILE* out, struct line* data, int nLines)
 {
     int comm = 0;
-    int num = 55;
+    int num = 0;
     int len = nLines;
 
     int ptr = 0;
@@ -122,22 +98,33 @@ int assembler(FILE* out, struct line* data, int nLines)
             case PUSH:
                 buffer[ptr] = PUSH;
                 ptr++;
-                sscanf(data[i].str + strlen("push") + 1, "%d", &num);
+                sscanf(data[i].str + strlen("push "), "%d", &num);
                 buffer[ptr] = num;
                 ptr++;
                 break;
             case POP:
                 buffer[ptr] = POP;
                 ptr++;
-                buffer[ptr] = comm_det(data[i].str + 4);
+                buffer[ptr] = comm_det(data[i].str + strlen("pop "));
                 ptr++;
                 break;
             case RPUSH:
                 buffer[ptr] = RPUSH;
                 ptr++;
-                buffer[ptr] = comm_det(data[i].str + 6);
+                buffer[ptr] = comm_det(data[i].str + strlen("rpush "));
                 ptr++;
                 break;
+
+            #define Define_Jumps(string, enum)                          \
+            case enum:                                                  \
+                buffer[ptr] = enum;                                     \
+                ptr++;                                                  \
+                sscanf(data[i].str + strlen(string) + 1, "%d", &num);   \
+                buffer[ptr] = num;                                      \
+                ptr++;                                                  \
+                break;
+            #include "jumps.h"
+            #undef Define_Jumps
             case ERR:
                 return ERR;
             default:

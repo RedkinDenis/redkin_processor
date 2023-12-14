@@ -1,4 +1,4 @@
-REG_NAME(ax)
-REG_NAME(bx)
-REG_NAME(cx)
-REG_NAME(dx)
+Define_Command("ax", ax)
+Define_Command("bx", bx)
+Define_Command("cx", cx)
+Define_Command("dx", dx)

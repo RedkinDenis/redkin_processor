@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 
     int fsize = GetFileSize(read);
 
-    char* data = 0;
+    char* data;
     fill_data(data, read, fsize);
 
     FILE* out = fopen(outName, "w");

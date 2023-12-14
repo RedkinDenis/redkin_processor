@@ -1,0 +1,11 @@
+#ifndef ERR_CODES.H
+#define ERR_CODES.H
+
+enum err
+{
+    SUCCES = 1,
+    t STEMP = 2,
+    int REALLERR = 3
+};
+
+#endif //ERR_CODES.H

@@ -1,5 +1,5 @@
-push 5
-push 10
+push 998
+push 1
 add
 push 4
 push 1

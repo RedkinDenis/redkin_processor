@@ -63,6 +63,7 @@ enum byte_codes comm_det(const char* comm)
     if(strcmp(comm, str) == 0)        \
         return enum;
     #include "command.h"
+    #include "registers.h"
     #undef Define_Command
     return ERR;
 }
@@ -70,7 +71,7 @@ enum byte_codes comm_det(const char* comm)
 int assembler(FILE* out, struct line* data, int nLines)
 {
     int comm = 0;
-    int num = 55;
+    int num = 0;
     int len = nLines;
 
     int ptr = 0;
@@ -87,7 +88,7 @@ int assembler(FILE* out, struct line* data, int nLines)
 
     printf("\nlen - %d\n", len);
 
-    char* buffer = (char*)calloc(len, sizeof(char));
+    int* buffer = (int*)calloc(len, sizeof(int));
 
     for(int i = 0; i < nLines; i++)
     {
@@ -97,22 +98,40 @@ int assembler(FILE* out, struct line* data, int nLines)
             case PUSH:
                 buffer[ptr] = PUSH;
                 ptr++;
-                sscanf(data[i].str + strlen("push") + 1, "%d", &num);
+                sscanf(data[i].str + strlen("push "), "%d", &num);
                 buffer[ptr] = num;
                 ptr++;
                 break;
             case POP:
                 buffer[ptr] = POP;
                 ptr++;
-                buffer[ptr] = comm_det(data[i].str + 4);
+                buffer[ptr] = comm_det(data[i].str + strlen("pop "));
                 ptr++;
                 break;
             case RPUSH:
                 buffer[ptr] = RPUSH;
                 ptr++;
-                buffer[ptr] = comm_det(data[i].str + 6);
+                buffer[ptr] = comm_det(data[i].str + strlen("rpush "));
                 ptr++;
                 break;
+            case JMP:
+                buffer[ptr] = JMP;
+                ptr++;
+                sscanf(data[i].str + strlen("jump") + 1, "%d", &num);
+                buffer[ptr] = num;
+                ptr++;
+                break;
+            #define Define_Jumps(string, enum, rub)                     \
+            case enum:                                                  \
+                buffer[ptr] = enum;                                     \
+                ptr++;                                                  \
+                sscanf(data[i].str + strlen(string) + 1, "%d", &num);   \
+                buffer[ptr] = num;                                      \
+                ptr++;                                                  \
+                break;
+            #include "jumps.h"
+            #undef Define_Jumps
+
             case ERR:
                 return ERR;
             default:
@@ -125,5 +144,5 @@ int assembler(FILE* out, struct line* data, int nLines)
     for(int i = 0; i < len; i++)
         printf(" %d", buffer[i]);
 
-    fwrite(buffer, sizeof(char), len, out);
+    fwrite(buffer, sizeof(int), len, out);
 }
