@@ -10,6 +10,12 @@ int assembler(FILE* out, struct line* data, int nLines);
 
 enum byte_codes comm_det(const char* comm);
 
+enum step
+{
+    command = 1,
+    number = 1
+};
+
 int main(int argc, char* argv[])
 {
     char* inpName = (char*)"word_code.txt";
@@ -97,37 +103,44 @@ int assembler(FILE* out, struct line* data, int nLines)
         {
             case PUSH:
                 buffer[ptr] = PUSH;
-                ptr++;
+                ptr += command;
                 sscanf(data[i].str + strlen("push "), "%d", &num);
                 buffer[ptr] = num;
-                ptr++;
+                ptr += number;
                 break;
             case POP:
                 buffer[ptr] = POP;
-                ptr++;
+                ptr += command;
                 buffer[ptr] = comm_det(data[i].str + strlen("pop "));
-                ptr++;
+                ptr += number;
                 break;
             case RPUSH:
                 buffer[ptr] = RPUSH;
-                ptr++;
+                ptr += command;;
                 buffer[ptr] = comm_det(data[i].str + strlen("rpush "));
-                ptr++;
+                ptr += number;
                 break;
             case JMP:
                 buffer[ptr] = JMP;
-                ptr++;
+                ptr += command;
                 sscanf(data[i].str + strlen("jump") + 1, "%d", &num);
                 buffer[ptr] = num;
-                ptr++;
+                ptr += number;
+                break;
+            case CALL:
+                buffer[ptr] = CALL;
+                ptr += command;
+                sscanf(data[i].str + strlen("call") + 1, "%d", &num);
+                buffer[ptr] = num;
+                ptr += number;
                 break;
             #define Define_Jumps(string, enum, rub)                     \
             case enum:                                                  \
                 buffer[ptr] = enum;                                     \
-                ptr++;                                                  \
+                ptr += command;                                         \
                 sscanf(data[i].str + strlen(string) + 1, "%d", &num);   \
                 buffer[ptr] = num;                                      \
-                ptr++;                                                  \
+                ptr += number;                                          \
                 break;
             #include "jumps.h"
             #undef Define_Jumps
@@ -136,7 +149,7 @@ int assembler(FILE* out, struct line* data, int nLines)
                 return ERR;
             default:
                 buffer[ptr] = comm;
-                ptr++;
+                ptr += command;
                 break;
         }
     }

@@ -21,6 +21,8 @@ enum byte_codes
     JAE = 41,
     JE = 43,
     JNE = 45,
+    CALL = 47,
+    RET = 49,
     ax = 1,
     bx = 2,
     cx = 3,

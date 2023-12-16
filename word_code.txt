@@ -1,9 +1,13 @@
-push 998
-push 1
+push 5
+push 10
 add
 push 4
 push 1
 sub
-div
+mul
 out
 het
+jump 5
+jae 5
+call 100
+ret

@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <malloc.h>
-#include <assert.h>                                                                  // подабовлять больше проверок и ассертов
+#include <assert.h>
 
 #include "stack.h"
 
@@ -21,40 +21,47 @@
     printf("\ndata[0] - %d\ncapacity - %d" ,stk.data[0], stk.capacity);
 }*/
 
-void stack_dump(struct Stack* stk, int LINE, const char* stk_name)
+void stack_dump(struct Stack* stk, int LINE, const char* stk_name, const char* file_name, const char* func_name)
 {
     printf("--------STACK---------");
     printf("\n------DUMP_BEGIN------\n");
     printf("\nstack name: %s\n", stk_name);
-    printf("\nDUMP was called from line: %d\n", LINE);
-    printf("\nstack adress: %d\n", stk);                                        // выводить функцию и файл откуда был вызов
+    printf("\nDUMP was called from function: %s \n"
+                             "from file: %s \n"
+                             "from line: %d \n", func_name, file_name, LINE);
+    printf("\nstack adress: %d\n", stk);
     printf("stack->data adress: %d\n", stk->data);
     printf("capacity - %d\nsize - %d\nstack:\n", stk->capacity, stk->size);
     for(int i = 0; i < stk->size; i++)
-        printf("%d ", stk->data[i]);
-    printf("* ");
+        printf("*[%d] = %d  ", i, stk->data[i]);
     for(int i = stk->size; i < stk->capacity; i++)
-        printf("%d ", stk->data[i]);
-                                                // неиспользованные элементы - poison, вывод формата *[i] = ...
-    printf("\n-------DUMP_END-------\n\n"); // TODO
+        printf("*[%d] = poison  ", i);
+
+    printf("\n-------DUMP_END-------\n\n");
 }
 
 enum err stack_ctor(struct Stack* stk, size_t capacity)
 {
-    if(stk->capacity > 0) // data
-    {
-        return ALRCR; //ТТКЖ - более развернутые имена енамов
-    }
+    if(stk->capacity != 0 && stk->capacity != (size_t)-1)
+        return STACK_ALREDY_CREATED;
 
-    // capacity > 0 verify
-    stk->data = (elem_t*)calloc(capacity, sizeof(elem_t)); // verify
+    assert(capacity > 0);
+    elem_t* temp = (elem_t*)calloc(capacity, sizeof(elem_t));
+    if(temp == NULL)
+        return CALLOC_ERROR;
+
+    stk->data = temp;
     stk->capacity = capacity;
     stk->size = 0;
+
     return SUCCESS;
 }
 
 enum err stack_push(struct Stack* stk, const elem_t* x)
 {
+    if(stk == NULL)
+        return NULL_INSTEAD_PTR;
+
     enum err res = capacity_up(stk);
     if(res != SUCCESS)
         return res;
@@ -66,10 +73,12 @@ enum err stack_push(struct Stack* stk, const elem_t* x)
 
 enum err stack_pop(struct Stack* stk, elem_t* pop_el)
 {
+    if(stk == NULL)
+        return NULL_INSTEAD_PTR;
+
     if(stk->size <= 0)
     {
-        //printf("--pop error: stack is empty");
-        return STEMP;
+        return STK_EMPTY;
     }
 
     stk->size--;
@@ -86,12 +95,17 @@ enum err stack_pop(struct Stack* stk, elem_t* pop_el)
     return SUCCESS;
 }
 
-void stack_dtor(struct Stack* stk)
+enum err stack_dtor(struct Stack* stk)
 {
+    if(stk == NULL)
+        return NULL_INSTEAD_PTR;
+
     free(stk->data);
     stk->data = NULL;
-    stk->size = (size_t)-1;                    // > 0 значит пр и попытке повторно создать этот стек будет ощибка что он уже созданг
+    stk->size = (size_t)-1;
     stk->capacity = (size_t)-1;
+
+    return SUCCESS;
 }
 enum err capacity_down(struct Stack* stk)
 {
@@ -103,7 +117,7 @@ enum err capacity_down(struct Stack* stk)
 
     if(temp == NULL)
     {
-        return REALLERR;
+        return REALLOC_ERROR;
     }
 
     stk->capacity /= 2;
@@ -129,7 +143,7 @@ enum err capacity_up(struct Stack* stk)
 
     if(temp == NULL)
     {
-        return REALLERR;
+        return REALLOC_ERROR;
     }
 
     stk->data = (elem_t*)temp;

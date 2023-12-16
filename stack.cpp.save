@@ -41,13 +41,12 @@ void stack_dump(struct Stack* stk, int LINE, const char* stk_name)
 
 enum err stack_ctor(struct Stack* stk, size_t capacity)
 {
-    if(stk->capacity > 0) // data
-    {
-        return ALRCR; //ТТКЖ - более развернутые имена енамов
-    }
+    if(stk->capacity != 0 && stk->capacity != (size_t)-1)
+        return STACK_ALREDY_CREATED;
 
-    // capacity > 0 verify
-    stk->data = (elem_t*)calloc(capacity, sizeof(elem_t)); // verify
+    assert(capacity > 0);
+     = (elem_t*)calloc(capacity, sizeof(elem_t)); // verify
+    
     stk->capacity = capacity;
     stk->size = 0;
     return SUCCESS;
@@ -55,6 +54,9 @@ enum err stack_ctor(struct Stack* stk, size_t capacity)
 
 enum err stack_push(struct Stack* stk, const elem_t* x)
 {
+    if(stk == NULL)
+        return NULL_INSTEAD_PTR;
+
     enum err res = capacity_up(stk);
     if(res != SUCCESS)
         return res;
@@ -66,14 +68,18 @@ enum err stack_push(struct Stack* stk, const elem_t* x)
 
 enum err stack_pop(struct Stack* stk, elem_t* pop_el)
 {
+    if(stk == NULL)
+        return NULL_INSTEAD_PTR;
+
     if(stk->size <= 0)
     {
-        //printf("--pop error: stack is empty");
-        return STEMP;
+        return STK_EMPTY;
     }
-    if(pop_el == NULL)
-    stk->size--;                                                     // если pop_el == NULL попать в никуда
-    *pop_el = *(stk->data + stk->size);
+
+    stk->size--;
+
+    if(pop_el != NULL)
+        *pop_el = *(stk->data + stk->size);
 
     *(stk->data + stk->size) = poison;
 
@@ -86,9 +92,12 @@ enum err stack_pop(struct Stack* stk, elem_t* pop_el)
 
 void stack_dtor(struct Stack* stk)
 {
+    if(stk == NULL)
+        return NULL_INSTEAD_PTR;
+
     free(stk->data);
     stk->data = NULL;
-    stk->size = (size_t)-1;                    // > 0 значит пр и попытке повторно создать этот стек будет ощибка что он уже созданг
+    stk->size = (size_t)-1;
     stk->capacity = (size_t)-1;
 }
 enum err capacity_down(struct Stack* stk)
@@ -101,7 +110,7 @@ enum err capacity_down(struct Stack* stk)
 
     if(temp == NULL)
     {
-        return REALLERR;
+        return REALLOC_ERROR;
     }
 
     stk->capacity /= 2;
@@ -127,7 +136,7 @@ enum err capacity_up(struct Stack* stk)
 
     if(temp == NULL)
     {
-        return REALLERR;
+        return REALLOC_ERROR;
     }
 
     stk->data = (elem_t*)temp;

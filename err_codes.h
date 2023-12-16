@@ -4,11 +4,13 @@
 enum err
 {
     SUCCESS = 1,           // OPERATION IS SUCCESFUL
-    STEMP = 2,            // STACK IS EMPTY
-    REALLERR = 3,         // REALLOC ERROR
-    ALRCR = 4,             // STACK IS ALREDY CREATED
-    REG_NAME_ERR = 5,
-    COMM_NAME_ERR = 6
+    STK_EMPTY = 2,            // STACK IS EMPTY
+    REALLOC_ERROR = 3,
+    STACK_ALREDY_CREATED = 4,
+    UNKNOWN_REGISTER_NAME = 5,
+    UNKNOWN_COMMAND_NAME = 6,
+    NULL_INSTEAD_PTR = 7,
+    CALLOC_ERROR = 8
 };
 
 #endif //ERR_CODES_H

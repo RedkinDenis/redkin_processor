@@ -16,4 +16,6 @@ Define_Command("ja", JA)
 Define_Command("jae", JAE)
 Define_Command("je", JE)
 Define_Command("jne", JNE)
+Define_Command("call", CALL)
+Define_Command("ret", RET)
 
