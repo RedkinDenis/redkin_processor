@@ -5,8 +5,9 @@
 
 #include "input_output.h"
 #include "encoding.h"
+#include "err_codes.h"
 
-int assembler(FILE* out, struct line* data, int nLines);
+enum err assembler(FILE* out, struct line* data, int nLines);
 
 enum byte_codes comm_det(const char* comm);
 
@@ -33,10 +34,7 @@ int main(int argc, char* argv[])
 
     FILE* read = fopen(inpName, "rb");
     if(read == NULL)
-    {
-        printf("read file open error");
-        return 0;
-    }
+        return OPEN_ERROR;
 
     int fsize = GetFileSize(read);
 
@@ -47,20 +45,21 @@ int main(int argc, char* argv[])
 
     FILE* out = fopen(outName, "wb");
     if(out == NULL)
-    {
-        printf("out file open error");
-        return 0;
-    }
+        return OPEN_ERROR;
 
     fclose(read);
 
     //PrintData(data, n);
 
-    assembler(out, data.lines, data.nLines);
+    enum err res = assembler(out, data.lines, data.nLines);
+    if(res != SUCCESS)
+        return res;
 
     DataFree(&data);
 
     fclose(out);
+
+    return SUCCESS;
 }
 
 enum byte_codes comm_det(const char* comm)
@@ -74,8 +73,11 @@ enum byte_codes comm_det(const char* comm)
     return ERR;
 }
 
-int assembler(FILE* out, struct line* data, int nLines)
+enum err assembler(FILE* out, struct line* data, int nLines)
 {
+    if(out == NULL || data == NULL)
+        return NULL_INSTEAD_PTR;
+
     int comm = 0;
     int num = 0;
     int len = nLines;
@@ -85,11 +87,19 @@ int assembler(FILE* out, struct line* data, int nLines)
     for(int i = 0; i < nLines; i++)
     {
         for(int k = 0; k < data[i].len; k++)
+        {
             if(data[i].str[k] == ' ')
             {
                 data[i].str[k] = '\0';
                 len++;
+                k = data[i].len;
             }
+            if(data[i].str[k] == '$')    // символ начала комментария
+            {
+                data[i].str[k] = '\0';
+                k = data[i].len;
+            }
+        }
     }
 
     printf("\nlen - %d\n", len);
@@ -146,7 +156,8 @@ int assembler(FILE* out, struct line* data, int nLines)
             #undef Define_Jumps
 
             case ERR:
-                return ERR;
+                return UNKNOWN_COMMAND_NAME;
+
             default:
                 buffer[ptr] = comm;
                 ptr += command;

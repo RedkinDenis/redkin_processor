@@ -10,7 +10,8 @@ enum err
     UNKNOWN_REGISTER_NAME = 5,
     UNKNOWN_COMMAND_NAME = 6,
     NULL_INSTEAD_PTR = 7,
-    CALLOC_ERROR = 8
+    CALLOC_ERROR = 8,
+    OPEN_ERROR = 9
 };
 
 #endif //ERR_CODES_H

@@ -5,22 +5,6 @@
 
 #include "stack.h"
 
-
-/*int main()
-{
-    size_t cpc = 5;
-    struct Stack stk = {};
-
-    stack_ctor(&stk, cpc);
-
-    elem_t push_elem = 10;
-    stack_push(&stk, &push_elem);
-    printf("data[0] - %d\ncapacity - %d" ,stk.data[0], stk.capacity);
-
-    elem_t pop_elem = *stack_pop(&stk);
-    printf("\ndata[0] - %d\ncapacity - %d" ,stk.data[0], stk.capacity);
-}*/
-
 void stack_dump(struct Stack* stk, int LINE, const char* stk_name, const char* file_name, const char* func_name)
 {
     printf("--------STACK---------");
@@ -42,6 +26,9 @@ void stack_dump(struct Stack* stk, int LINE, const char* stk_name, const char* f
 
 enum err stack_ctor(struct Stack* stk, size_t capacity)
 {
+    if(stk == NULL)
+        return NULL_INSTEAD_PTR;
+
     if(stk->capacity != 0 && stk->capacity != (size_t)-1)
         return STACK_ALREDY_CREATED;
 
@@ -49,8 +36,8 @@ enum err stack_ctor(struct Stack* stk, size_t capacity)
     elem_t* temp = (elem_t*)calloc(capacity, sizeof(elem_t));
     if(temp == NULL)
         return CALLOC_ERROR;
-
     stk->data = temp;
+
     stk->capacity = capacity;
     stk->size = 0;
 
@@ -77,9 +64,7 @@ enum err stack_pop(struct Stack* stk, elem_t* pop_el)
         return NULL_INSTEAD_PTR;
 
     if(stk->size <= 0)
-    {
         return STK_EMPTY;
-    }
 
     stk->size--;
 
@@ -109,6 +94,9 @@ enum err stack_dtor(struct Stack* stk)
 }
 enum err capacity_down(struct Stack* stk)
 {
+    if(stk == NULL)
+        return NULL_INSTEAD_PTR;
+
     if(stk->capacity < 2 ||
        stk->capacity / 4 < stk->size)
         return SUCCESS;
@@ -129,7 +117,9 @@ enum err capacity_down(struct Stack* stk)
 
 enum err capacity_up(struct Stack* stk)
 {
-    assert(stk != NULL);
+    if(stk == NULL)
+        return NULL_INSTEAD_PTR;
+
     if(stk->size != stk->capacity)
         return SUCCESS;
 
