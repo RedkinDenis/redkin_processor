@@ -17,9 +17,17 @@ enum step
     number = 1
 };
 
+#define MARK_QUANTITY 20
+
+struct mark
+{
+    int num = 0;
+    int adress = 0;
+};
+
 int main(int argc, char* argv[])
 {
-    char* inpName = (char*)"word_code.txt";
+    char* inpName = (char*)"word_code1.txt";
     char* outName = (char*)"byte_code1.bin";
 
     if(argc == 3)
@@ -80,6 +88,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
 
     int comm = 0;
     int num = 0;
+    int num1 = 0;
     int len = nLines;
 
     int ptr = 0;
@@ -102,9 +111,44 @@ enum err assembler(FILE* out, struct line* data, int nLines)
         }
     }
 
-    printf("\nlen - %d\n", len);
+    //printf("\nlen - %d\n", len);
+
+    struct mark* marks = (struct mark*)calloc(MARK_QUANTITY, sizeof(struct mark));
+    int marks_len = 0;
+    int temp = 1;
+    int n = 0;
 
     int* buffer = (int*)calloc(len, sizeof(int));
+
+
+    for(int i = 0; i < nLines; i++)
+    {
+        comm = comm_det(data[i].str);
+
+        if(comm == ADD || comm == SUB || comm == MUL || comm == DIV || comm == HET || comm == OUT || comm == RET)
+            temp++;
+
+        else if(comm == ERR)
+        {
+            if(data[i].str[data[i].len - 1] == ':')
+            {
+                for(int j = 0; j < data[i].len; j++)
+                    marks[marks_len].num += data[i].str[j];
+
+                marks[marks_len].adress = temp;
+                marks_len++;
+
+                //printf("\nmark %d\n", temp);
+            }
+        }
+
+        else
+            temp += 2;
+    }
+
+    //for(int i = 0; i < marks_len; i++)
+    //    printf("\n\nmarks[%d]: \nnum - %d\nadress - %d\n", i, marks[i].num, marks[i].adress);
+
 
     for(int i = 0; i < nLines; i++)
     {
@@ -126,7 +170,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
                 break;
             case RPUSH:
                 buffer[ptr] = RPUSH;
-                ptr += command;;
+                ptr += command;
                 buffer[ptr] = comm_det(data[i].str + strlen("rpush "));
                 ptr += number;
                 break;
@@ -140,7 +184,25 @@ enum err assembler(FILE* out, struct line* data, int nLines)
             case CALL:
                 buffer[ptr] = CALL;
                 ptr += command;
-                sscanf(data[i].str + strlen("call") + 1, "%d", &num);
+
+                if(data[i].str[data[i].len - 1] == ':')
+                {
+                    num = 0;
+                    for(int k = strlen("call"); k < data[i].len; k++)
+                        num += data[i].str[k];
+
+                    num1 = num;
+
+                    for(int j = 0; j < marks_len; j++)
+                        if(num == marks[j].num)
+                            num = marks[j].adress;
+
+                    if(num1 == num)
+                        return MARK_NOT_FOUND;
+                }
+                else
+                    sscanf(data[i].str + strlen("call "), "%d", &num);
+
                 buffer[ptr] = num;
                 ptr += number;
                 break;
@@ -156,6 +218,8 @@ enum err assembler(FILE* out, struct line* data, int nLines)
             #undef Define_Jumps
 
             case ERR:
+                if(data[i].str[data[i].len - 1] == ':')
+                    break;
                 return UNKNOWN_COMMAND_NAME;
 
             default:
@@ -170,3 +234,5 @@ enum err assembler(FILE* out, struct line* data, int nLines)
 
     fwrite(buffer, sizeof(int), len, out);
 }
+
+

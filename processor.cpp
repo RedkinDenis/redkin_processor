@@ -17,6 +17,7 @@ struct processor
     int* data = {};
     int ip = 0;
     int ax  = 0, bx = 0, cx = 0, dx = 0;
+    int* RAM = 0;
     struct Stack cmd_stk = {};
     struct Stack call_stk = {};
 };
@@ -88,7 +89,7 @@ enum err executor(struct processor* proc)
 {
     #define POP(stk_type, reg) res = stack_pop(&(proc->stk_type), &reg); \
                      if(res != SUCCESS) \
-                        return res;
+                        return res;                                                      // âûíåñòè â õåäåğ
     #define PUSH(stk_type, reg) res = stack_push(&(proc->stk_type), &reg); \
                       if(res != SUCCESS) \
                         return res;
@@ -217,6 +218,11 @@ enum err fill_proc(struct processor* proc, FILE* read, int fsize)
         return CALLOC_ERROR;
     proc->data = temp;
 
+    temp = (int*)calloc(100, sizeof(int));
+    if(temp == NULL)
+        return CALLOC_ERROR;
+    proc->RAM = temp;
+
     enum err res = stack_ctor(&proc->cmd_stk, 10);
     if(res != SUCCESS)
         return res;
@@ -254,7 +260,6 @@ enum err proc_dump(struct processor* proc, int LINE, const char* proc_name, cons
                "cx - %d \n"
                "dx - %d \n", proc->ax, proc->bx, proc->cx, proc->dx);
 
-
         int i = 0;
         while(proc->data[i] != 0)
         {
@@ -278,6 +283,7 @@ enum err proc_free(struct processor* proc)
         return NULL_INSTEAD_PTR;
 
     free(proc->data);
+    free(proc->RAM);
     stack_dtor(&proc->cmd_stk);
     proc->ip = 0;
 

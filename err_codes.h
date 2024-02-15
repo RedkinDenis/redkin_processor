@@ -11,7 +11,8 @@ enum err
     UNKNOWN_COMMAND_NAME = 6,
     NULL_INSTEAD_PTR = 7,
     CALLOC_ERROR = 8,
-    OPEN_ERROR = 9
+    OPEN_ERROR = 9,
+    MARK_NOT_FOUND = 10
 };
 
 #endif //ERR_CODES_H
