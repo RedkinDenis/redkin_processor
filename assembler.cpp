@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <assert.h>
+#include <ctype.h>
+#include <stdint.h>
 
 #include "input_output.h"
 #include "encoding.h"
@@ -14,7 +16,8 @@ enum byte_codes comm_det(const char* comm);
 enum step
 {
     command = 1,
-    number = 1
+    number = 4,
+    reg = 1
 };
 
 #define MARK_QUANTITY 20
@@ -115,10 +118,10 @@ enum err assembler(FILE* out, struct line* data, int nLines)
 
     struct mark* marks = (struct mark*)calloc(MARK_QUANTITY, sizeof(struct mark));
     int marks_len = 0;
-    int temp = 1;
     int n = 0;
 
-    int* buffer = (int*)calloc(len, sizeof(int));
+    char* buffer = (char*)calloc(len * 4, sizeof(char));
+    //printf("len - %d\n", len);
 
 
     for(int i = 0; i < nLines; i++)
@@ -126,59 +129,177 @@ enum err assembler(FILE* out, struct line* data, int nLines)
         comm = comm_det(data[i].str);
 
         if(comm == ADD || comm == SUB || comm == MUL || comm == DIV || comm == HET || comm == OUT || comm == RET)
-            temp++;
+            ptr++;
 
         else if(comm == ERR)
-        {
+        {                                                                             // вынести в функцию
             if(data[i].str[data[i].len - 1] == ':')
             {
                 for(int j = 0; j < data[i].len; j++)
                     marks[marks_len].num += data[i].str[j];
 
-                marks[marks_len].adress = temp;
+                marks[marks_len].adress = ptr;
                 marks_len++;
 
-                //printf("\nmark %d\n", temp);
+                //printf("\nmark %d\n", ptr);
             }
-        }
+        }           // не учитывается разный размер комманды и аргумента (попробовать сделать через strstr)
 
         else
-            temp += 2;
+        {
+            if(strstr(data[i].str, "ax") != NULL || strstr(data[i].str, "bx") != NULL || strstr(data[i].str, "cx") != NULL || strstr(data[i].str, "dx") != NULL)
+                ptr += 2;
+            else
+                ptr += 5;
+        }
     }
 
     //for(int i = 0; i < marks_len; i++)
     //    printf("\n\nmarks[%d]: \nnum - %d\nadress - %d\n", i, marks[i].num, marks[i].adress);
 
-
+    ptr = 0;
     for(int i = 0; i < nLines; i++)
     {
         comm = comm_det(data[i].str);
         switch(comm)
         {
             case PUSH:
-                buffer[ptr] = PUSH;
+                //printf("%d ", isdigit(*(data[i].str + strlen("push "))));
+                if(isdigit(*(data[i].str + strlen("push "))))
+                {
+                    sscanf(data[i].str + strlen("push "), "%d", &num);
+                    buffer[ptr] = PUSH;
+                }
+
+                else if(*(data[i].str + strlen("push ")) == '[' && *(data[i].str + data[i].len - 1) == ']')
+                    if(isdigit(*(data[i].str + strlen("push ["))))
+                    {
+                        sscanf(data[i].str + strlen("push "), "[%d]", &num);
+                        buffer[ptr] = RAMPUSH;
+                    }
+                    else if(*(data[i].str + strlen("push [a")) == 'x')
+                    {
+                        buffer[ptr] = RAMPUSHR;
+                        switch(*(data[i].str + strlen("push [")))
+                        {
+                            case 'a':
+                                num = ax;
+                                break;
+                            case 'b':
+                                num = bx;
+                                break;
+                            case 'c':
+                                num = cx;
+                                break;
+                            case 'd':
+                                num = dx;
+                                break;
+                            default:
+                                return UNKNOWN_REGISTER_NAME;
+                        }
+                        ptr += command;
+                        memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(char));
+                        ptr += reg;
+                        break;
+                    }
+                if(*(data[i].str + strlen("push a")) == 'x')
+                    {
+                        buffer[ptr] = RPUSH;
+                        switch(*(data[i].str + strlen("push ")))
+                        {
+                            case 'a':
+                                num = ax;
+                                break;
+                            case 'b':
+                                num = bx;
+                                break;
+                            case 'c':
+                                num = cx;
+                                break;
+                            case 'd':
+                                num = dx;
+                                break;
+                            default:
+                                return UNKNOWN_REGISTER_NAME;
+                        }
+                        ptr += command;
+                        memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(char));
+                        ptr += reg;
+                        break;
+                    }
+
                 ptr += command;
-                sscanf(data[i].str + strlen("push "), "%d", &num);
-                buffer[ptr] = num;
+                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));
                 ptr += number;
                 break;
+
             case POP:
-                buffer[ptr] = POP;
+                if(*(data[i].str + strlen("pop ")) == '[' && *(data[i].str + data[i].len - 1) == ']')
+                    if(isdigit(*(data[i].str + strlen("pop ["))))
+                    {
+                        sscanf(data[i].str + strlen("pop "), "[%d]", &num);
+                        //printf("num - %d\n", num);
+                        buffer[ptr] = RAMPOP;
+                    }
+                    else if(*(data[i].str + strlen("pop [a")) == 'x')
+                    {
+                        buffer[ptr] = RAMRPOP;
+                        switch(*(data[i].str + strlen("pop [")))
+                        {
+                            case 'a':
+                                num = ax;
+                                break;
+                            case 'b':
+                                num = bx;
+                                break;
+                            case 'c':
+                                num = cx;
+                                break;
+                            case 'd':
+                                num = dx;
+                                break;
+                            default:
+                                return UNKNOWN_REGISTER_NAME;
+                        }
+                        ptr += command;
+                        memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(char));
+                        ptr += reg;
+                        break;
+                    }
+                if(*(data[i].str + strlen("pop a")) == 'x')
+                    {
+                        buffer[ptr] = POP;
+                        switch(*(data[i].str + strlen("pop ")))
+                        {
+                            case 'a':
+                                num = ax;
+                                break;
+                            case 'b':
+                                num = bx;
+                                break;
+                            case 'c':
+                                num = cx;
+                                break;
+                            case 'd':
+                                num = dx;
+                                break;
+                            default:
+                                return UNKNOWN_REGISTER_NAME;
+                        }
+                        ptr += command;
+                        memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(char));
+                        ptr += reg;
+                        break;
+                    }
                 ptr += command;
-                buffer[ptr] = comm_det(data[i].str + strlen("pop "));
-                ptr += number;
-                break;
-            case RPUSH:
-                buffer[ptr] = RPUSH;
-                ptr += command;
-                buffer[ptr] = comm_det(data[i].str + strlen("rpush "));
+                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(char));
                 ptr += number;
                 break;
             case JMP:
                 buffer[ptr] = JMP;
                 ptr += command;
                 sscanf(data[i].str + strlen("jump") + 1, "%d", &num);
-                buffer[ptr] = num;
+                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));
                 ptr += number;
                 break;
             case CALL:
@@ -203,7 +324,8 @@ enum err assembler(FILE* out, struct line* data, int nLines)
                 else
                     sscanf(data[i].str + strlen("call "), "%d", &num);
 
-                buffer[ptr] = num;
+
+                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));
                 ptr += number;
                 break;
             #define Define_Jumps(string, enum, rub)                     \
@@ -211,7 +333,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
                 buffer[ptr] = enum;                                     \
                 ptr += command;                                         \
                 sscanf(data[i].str + strlen(string) + 1, "%d", &num);   \
-                buffer[ptr] = num;                                      \
+                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));                                      \
                 ptr += number;                                          \
                 break;
             #include "jumps.h"
@@ -223,16 +345,18 @@ enum err assembler(FILE* out, struct line* data, int nLines)
                 return UNKNOWN_COMMAND_NAME;
 
             default:
-                buffer[ptr] = comm;
+                buffer[ptr] = (char)comm;
                 ptr += command;
                 break;
         }
     }
 
-    for(int i = 0; i < len; i++)
-        printf(" %d", buffer[i]);
+    //printf("ptr - %d\n", ptr);
 
-    fwrite(buffer, sizeof(int), len, out);
+    for(int i = 0; i < ptr; i++)
+        printf(" %d", (uint8_t)buffer[i]);
+    printf("\n");
+    fwrite(buffer, sizeof(char), ptr, out);
 }
 
 

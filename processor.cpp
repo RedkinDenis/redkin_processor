@@ -14,9 +14,11 @@
 
 struct processor
 {
-    int* data = {};
+    char* data = {};
+    int data_size;
     int ip = 0;
-    int ax  = 0, bx = 0, cx = 0, dx = 0;
+    int* reg = 0;
+    /*int ax  = 0, bx = 0, cx = 0, dx = 0;*/
     int* RAM = 0;
     struct Stack cmd_stk = {};
     struct Stack call_stk = {};
@@ -25,7 +27,8 @@ struct processor
 enum step
 {
     command = 1,
-    number = 1
+    number = 4,
+    reg = 1
 };
 
 enum err fill_proc(struct processor* proc, FILE* read, int fsize);
@@ -42,11 +45,11 @@ int main(int argc, char* argv[])
 {
     enum err res = (enum err)system("ass.exe");
 
-    if(res != SUCCESS)
+    /*if(res != SUCCESS)
     {
-        printf("error number %d in ass.exe", res);
+        printf("\nerror number %d in ass.exe\n", res);
         return res;
-    }
+    }*/
 
     char* inpName = (char*)"byte_code1.bin";
 
@@ -57,18 +60,18 @@ int main(int argc, char* argv[])
 
     if(read == NULL)
     {
-        printf("read file open error");
+        printf("\nread file open error\n");
         return 0;
     }
 
-    int fsize = GetFileSize(read) / sizeof(int);
+    int fsize = GetFileSize(read) / sizeof(char);
 
     struct processor processor = {};
 
     #define check_result(func)                  \
     if(res != SUCCESS)                          \
     {                                           \
-        printf("error in " #func " %d ", res);     \
+        printf("\nerror in " #func " %d \n", res);     \
         return res;                             \
     }
 
@@ -87,16 +90,22 @@ int main(int argc, char* argv[])
 
 enum err executor(struct processor* proc)
 {
-    #define POP(stk_type, reg) res = stack_pop(&(proc->stk_type), &reg); \
-                     if(res != SUCCESS) \
-                        return res;                                                      // вынести в хедер
-    #define PUSH(stk_type, reg) res = stack_push(&(proc->stk_type), &reg); \
-                      if(res != SUCCESS) \
+    #define POP(stk_type, reg)                                 \
+                    res = stack_pop(&(proc->stk_type), &buf);  \
+                    if(res != SUCCESS)                         \
+                       return res;                             \
+                    memcpy(&reg, &buf, sizeof(int));
+
+    #define PUSH(stk_type, reg)                                \
+                    memcpy(&buf, &reg, sizeof(int));           \
+                    res = stack_push(&(proc->stk_type), &buf); \
+                    if(res != SUCCESS)                         \
                         return res;
 
     int x1 = 0, x2 = 0;
     int x = 0;
-    int cmd = 0;
+    char cmd = 0;
+    int buf = 0;
     err res;
 
     int running = 1;
@@ -104,11 +113,67 @@ enum err executor(struct processor* proc)
     while(running)
     {
         cmd = proc->data[proc->ip];
-        switch(cmd)
+
+        //printf("\nip - %d, cmd - %d", proc->ip, cmd);
+
+        switch(cmd & 0x1F)
         {
             case PUSH:
-                PUSH(cmd_stk, proc->data[proc->ip + command])
-                proc->ip += (command + number);
+
+                if((cmd & 0xE0) == 0)
+                {
+                    // в стек из даты
+                    PUSH(cmd_stk, proc->data[proc->ip + command])
+                    proc->ip += (command + number);
+                }
+
+                else if((cmd & 0xE0) == 0x40)
+                {
+                    if(proc->data[proc->ip + command] > 4)
+                        return UNKNOWN_REGISTER_NAME;
+                    //в стек из регистра
+                    PUSH(cmd_stk, proc->reg[proc->data[proc->ip + command] - 1])
+                    proc->ip += (command + reg);
+                }
+
+                else if((cmd & 0x20) == 0x20)
+                {
+                    if((cmd & 0x80) == 0x80)
+                    {
+                        if(proc->data[proc->ip + command] > 4)
+                            return UNKNOWN_REGISTER_NAME;
+                        // в стек из оперативки по адресу из регистра
+                        PUSH(cmd_stk, proc->RAM[proc->reg[proc->data[proc->ip + command] - 1]])
+                        proc->ip += (command + reg);
+                    }
+                    else
+                    {
+                        // в стек из оперативки по адресу из даты
+                        PUSH(cmd_stk, proc->RAM[proc->data[proc->ip + command]])
+                        proc->ip += (command + number);
+                    }
+                }
+                break;
+
+            case POP:
+                if((cmd & 0x40) == 0x40)
+                {
+                    // из стека в регистр
+                    POP(cmd_stk, proc->data[proc->ip + command])
+                    proc->ip += (command + number);
+                }
+                else if((cmd & 0x20) == 0x20)
+                {
+                    // из стека в оперативу по числовому
+                    POP(cmd_stk, proc->RAM[proc->data[proc->ip + command]])
+                    proc->ip += (command + number);
+                }
+                else if((cmd & 0xA0) == 0xA0)
+                {
+                    // из стека в оперативу по значению регистра
+                    POP(cmd_stk, proc->RAM[proc->reg[proc->data[proc->ip + command] - 1]]);
+                    proc->ip += (command + reg);
+                }
                 break;
 
             #define MATH_COMM(enum, operand) \
@@ -138,38 +203,6 @@ enum err executor(struct processor* proc)
                 PUSH(cmd_stk, x)
                 proc->ip += command;
                 break;
-            case RPUSH:
-                proc->ip += command;
-                switch(proc->data[proc->ip])
-                {
-                    #define Define_Command(str, enum) \
-                    case enum:              \
-                        PUSH(cmd_stk, proc->enum); \
-                        break;
-                    #include "registers.h"
-                    #undef Define_Command
-                    default:
-                        return UNKNOWN_REGISTER_NAME;
-                        break;
-                }
-                proc->ip += number;
-                break;
-            case POP:
-                proc->ip += command;
-                switch(proc->data[proc->ip])
-                {
-                    #define Define_Command(str, enum) \
-                    case enum:              \
-                        POP(cmd_stk, proc->enum)  \
-                        break;
-                    #include "registers.h"
-                    #undef Define_Command
-                    default:
-                        return UNKNOWN_REGISTER_NAME;
-                        break;
-                }
-                proc->ip += number;
-                break;
             case JMP:
                 proc->ip = proc->data[proc->ip + command];
                 break;
@@ -184,7 +217,8 @@ enum err executor(struct processor* proc)
             #undef Define_Jumps
 
             case CALL:
-                PUSH(call_stk, proc->ip + command + number)
+                x = proc->ip + command + number;
+                PUSH(call_stk, x)
                 proc->ip = proc->data[proc->ip + command];
                 break;
             case RET:
@@ -192,10 +226,13 @@ enum err executor(struct processor* proc)
                 break;
 
             default:
+                printf("\nerr in cmd %d", cmd);
+
                 return UNKNOWN_COMMAND_NAME;
                 break;
         }
-        //STACK_DUMP(proc->cmd_stk, executor)
+        /*PROC_DUMP(proc, executor)
+        STACK_DUMP(proc->cmd_stk, executor)*/
     }
     return SUCCESS;
 }
@@ -213,15 +250,15 @@ enum err fill_proc(struct processor* proc, FILE* read, int fsize)
     if(proc == NULL)
         return NULL_INSTEAD_PTR;
 
-    int* temp = (int*)calloc(fsize + 1, sizeof(int));
+    char* temp = (char*)calloc(fsize + 1, sizeof(char));
     if(temp == NULL)
         return CALLOC_ERROR;
     proc->data = temp;
 
-    temp = (int*)calloc(100, sizeof(int));
-    if(temp == NULL)
+    int* temp1 = (int*)calloc(100, sizeof(int));
+    if(temp1 == NULL)
         return CALLOC_ERROR;
-    proc->RAM = temp;
+    proc->RAM = temp1;
 
     enum err res = stack_ctor(&proc->cmd_stk, 10);
     if(res != SUCCESS)
@@ -231,7 +268,18 @@ enum err fill_proc(struct processor* proc, FILE* read, int fsize)
     if(res != SUCCESS)
         return res;
 
-    int x = fread(proc->data, sizeof(int), fsize, read);
+    temp1 = (int*)calloc(4, sizeof(int));
+    if(temp1 == NULL)
+        return CALLOC_ERROR;
+    proc->reg = temp1;
+
+    int x = fread(proc->data, sizeof(char), fsize, read);
+
+    proc->data_size = fsize;
+
+   // printf("\nfsize - %d\n", fsize);
+    //for(int i = 0; i < fsize; i++)
+      //  printf(" %d", proc->data[i]);
 
     //PROC_DUMP(proc, fill_proc)
     assert(x == fsize);
@@ -258,10 +306,11 @@ enum err proc_dump(struct processor* proc, int LINE, const char* proc_name, cons
         printf("ax - %d \n"
                "bx - %d \n"
                "cx - %d \n"
-               "dx - %d \n", proc->ax, proc->bx, proc->cx, proc->dx);
+               "dx - %d \n", proc->reg[0], proc->reg[1], proc->reg[2], proc->reg[3]);
+
 
         int i = 0;
-        while(proc->data[i] != 0)
+        while(i < proc->data_size)
         {
             printf("%d ", proc->data[i]);
             i++;
@@ -286,11 +335,10 @@ enum err proc_free(struct processor* proc)
     free(proc->RAM);
     stack_dtor(&proc->cmd_stk);
     proc->ip = 0;
+    proc->data_size = 0;
 
-    proc->ax = 0;
-    proc->bx = 0;
-    proc->cx = 0;
-    proc->dx = 0;
+    free(proc->reg);
+
     return SUCCESS;
 }
 
