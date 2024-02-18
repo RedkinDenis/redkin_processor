@@ -26,7 +26,7 @@ enum step
 struct mark
 {
     int num = 0;
-    int adress = 0;
+    elem_t adress = 0;
 };
 
 int main(int argc, char* argv[])
@@ -91,8 +91,8 @@ enum err assembler(FILE* out, struct line* data, int nLines)
         return NULL_INSTEAD_PTR;
 
     int comm = 0;
-    int num = 0;
-    int num1 = 0;
+    elem_t num = 0;
+    elem_t num1 = 0;
     int len = nLines;
 
     int ptr = 0;
@@ -176,14 +176,14 @@ enum err assembler(FILE* out, struct line* data, int nLines)
                 //printf("%d ", isdigit(*(data[i].str + strlen("push "))));
                 if(isdigit(*(data[i].str + strlen("push "))))
                 {
-                    sscanf(data[i].str + strlen("push "), "%d", &num);
+                    sscanf(data[i].str + strlen("push "), "%f", &num);
                     buffer[ptr] = PUSH;
                 }
 
                 else if(*(data[i].str + strlen("push ")) == '[' && strchr(data[i].str + strlen("push "), ']') != NULL)
                     if(isdigit(*(data[i].str + strlen("push ["))))
                     {
-                        sscanf(data[i].str + strlen("push "), "[%d]", &num);
+                        sscanf(data[i].str + strlen("push "), "[%f]", &num);
                         buffer[ptr] = RAMPUSH;
                     }
                     else if(*(data[i].str + strlen("push [a")) == 'x')
@@ -238,7 +238,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
                     }
 
                 ptr += command;
-                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));
+                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(elem_t));
                 ptr += number;
                 break;
 
@@ -246,7 +246,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
                 if(*(data[i].str + strlen("pop ")) == '[' && strchr(data[i].str + strlen("push "), ']') != NULL)
                     if(isdigit(*(data[i].str + strlen("pop ["))))
                     {
-                        sscanf(data[i].str + strlen("pop "), "[%d]", &num);
+                        sscanf(data[i].str + strlen("pop "), "[%f]", &num);
                         //printf("num - %d\n", num);
                         buffer[ptr] = RAMPOP;
                     }
@@ -322,7 +322,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
             return MARK_NOT_FOUND;                           \
     }                                                        \
     else                                                     \
-        sscanf(data[i].str + strlen(cmd) + 1, "%d", &num);
+        sscanf(data[i].str + strlen(cmd) + 1, "%f", &num);
 
             case JMP:
                 buffer[ptr] = JMP;
@@ -330,7 +330,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
 
                 CHECK_MARK("call")
 
-                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));
+                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(elem_t));
                 ptr += number;
                 break;
 
@@ -340,7 +340,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
 
                 CHECK_MARK("call")
 
-                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));
+                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(elem_t));
                 ptr += number;
                 break;
 
@@ -349,7 +349,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
                 buffer[ptr] = enum;                                             \
                 ptr += command;                                                 \
                 CHECK_MARK(string)                                              \
-                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));    \
+                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(elem_t));    \
                 ptr += number;                                                  \
                 break;
             #include "jumps.h"

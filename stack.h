@@ -7,7 +7,7 @@
 
 #include "err_codes.h"
 
-typedef float elem_t;
+typedef int elem_t;
 
 static const elem_t poison = 2147483647;
 

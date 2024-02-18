@@ -199,7 +199,7 @@ enum err executor(struct processor* proc)
             case OUT:
                 POP(cmd_stk, x)
                 proc->ip += command;
-                printf("\nresult - %d\n", x);
+                printf("\nresult - %f\n", x);
                 break;
             case HET:
                 stack_dtor(&(proc->cmd_stk));
