@@ -8,6 +8,7 @@
 #include "input_output.h"
 #include "encoding.h"
 #include "err_codes.h"
+#include "stack.h"
 
 enum err assembler(FILE* out, struct line* data, int nLines);
 
@@ -15,9 +16,9 @@ enum byte_codes comm_det(const char* comm);
 
 enum step
 {
-    command = 1,
-    number = 4,
-    reg = 1
+    command = sizeof(char),
+    number = sizeof(elem_t),
+    reg = sizeof(char)
 };
 
 #define MARK_QUANTITY 20
@@ -30,8 +31,8 @@ struct mark
 
 int main(int argc, char* argv[])
 {
-    char* inpName = (char*)"word_code1.txt";
-    char* outName = (char*)"byte_code1.bin";
+    char* inpName = (char*)"factorial.txt";
+    char* outName = (char*)"factorial.bin";
 
     if(argc == 3)
     {
@@ -126,10 +127,11 @@ enum err assembler(FILE* out, struct line* data, int nLines)
 
     for(int i = 0; i < nLines; i++)
     {
-        comm = comm_det(data[i].str);
 
+        comm = comm_det(data[i].str);
+        //printf("cmd - %d    ", comm);
         if(comm == ADD || comm == SUB || comm == MUL || comm == DIV || comm == HET || comm == OUT || comm == RET)
-            ptr++;
+            ptr += command;
 
         else if(comm == ERR)
         {                                                                             // вынести в функцию
@@ -140,18 +142,25 @@ enum err assembler(FILE* out, struct line* data, int nLines)
 
                 marks[marks_len].adress = ptr;
                 marks_len++;
-
-                //printf("\nmark %d\n", ptr);
             }
-        }           // не учитывается разный размер комманды и аргумента (попробовать сделать через strstr)
-
+        }
         else
         {
-            if(strstr(data[i].str, "ax") != NULL || strstr(data[i].str, "bx") != NULL || strstr(data[i].str, "cx") != NULL || strstr(data[i].str, "dx") != NULL)
-                ptr += 2;
+            /*for(int j = 0; j < data[i].len; j++)
+                printf("%c", data[i].str[j]);
+            printf("\n");*/
+            //printf("\nhere\n");
+
+            if((strstr(data[i].str + strlen(data[i].str) + 1, "ax") != NULL) || (strstr(data[i].str + strlen(data[i].str) + 1, "bx") != NULL) || (strstr(data[i].str + strlen(data[i].str) + 1, "cx") != NULL) || (strstr(data[i].str + strlen(data[i].str) + 1, "dx") != NULL))
+            //if(strchr(data[i].str + strlen(data[i].str) + 1, 'x') != NULL)
+            {
+                //printf("\nhere\n");
+                ptr += (command + reg);
+            }
             else
-                ptr += 5;
+                ptr += (command + number);
         }
+        //printf("ptr - %d\n", ptr);
     }
 
     //for(int i = 0; i < marks_len; i++)
@@ -171,7 +180,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
                     buffer[ptr] = PUSH;
                 }
 
-                else if(*(data[i].str + strlen("push ")) == '[' && *(data[i].str + data[i].len - 1) == ']')
+                else if(*(data[i].str + strlen("push ")) == '[' && strchr(data[i].str + strlen("push "), ']') != NULL)
                     if(isdigit(*(data[i].str + strlen("push ["))))
                     {
                         sscanf(data[i].str + strlen("push "), "[%d]", &num);
@@ -234,7 +243,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
                 break;
 
             case POP:
-                if(*(data[i].str + strlen("pop ")) == '[' && *(data[i].str + data[i].len - 1) == ']')
+                if(*(data[i].str + strlen("pop ")) == '[' && strchr(data[i].str + strlen("push "), ']') != NULL)
                     if(isdigit(*(data[i].str + strlen("pop ["))))
                     {
                         sscanf(data[i].str + strlen("pop "), "[%d]", &num);
@@ -295,52 +304,61 @@ enum err assembler(FILE* out, struct line* data, int nLines)
                 memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(char));
                 ptr += number;
                 break;
+
+    #define CHECK_MARK(cmd)                                  \
+    if(data[i].str[data[i].len - 1] == ':')                  \
+    {                                                        \
+        num = 0;                                             \
+        for(int k = strlen(cmd); k < data[i].len; k++)       \
+            num += data[i].str[k];                           \
+                                                             \
+        num1 = num;                                          \
+                                                             \
+        for(int j = 0; j < marks_len; j++)                   \
+            if(num == marks[j].num)                          \
+                num = marks[j].adress;                       \
+                                                             \
+        if(num1 == num)                                      \
+            return MARK_NOT_FOUND;                           \
+    }                                                        \
+    else                                                     \
+        sscanf(data[i].str + strlen(cmd) + 1, "%d", &num);
+
             case JMP:
                 buffer[ptr] = JMP;
                 ptr += command;
-                sscanf(data[i].str + strlen("jump") + 1, "%d", &num);
+
+                CHECK_MARK("call")
+
                 memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));
                 ptr += number;
                 break;
+
             case CALL:
                 buffer[ptr] = CALL;
                 ptr += command;
 
-                if(data[i].str[data[i].len - 1] == ':')
-                {
-                    num = 0;
-                    for(int k = strlen("call"); k < data[i].len; k++)
-                        num += data[i].str[k];
-
-                    num1 = num;
-
-                    for(int j = 0; j < marks_len; j++)
-                        if(num == marks[j].num)
-                            num = marks[j].adress;
-
-                    if(num1 == num)
-                        return MARK_NOT_FOUND;
-                }
-                else
-                    sscanf(data[i].str + strlen("call "), "%d", &num);
-
+                CHECK_MARK("call")
 
                 memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));
                 ptr += number;
                 break;
-            #define Define_Jumps(string, enum, rub)                     \
-            case enum:                                                  \
-                buffer[ptr] = enum;                                     \
-                ptr += command;                                         \
-                sscanf(data[i].str + strlen(string) + 1, "%d", &num);   \
-                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));                                      \
-                ptr += number;                                          \
+
+            #define Define_Jumps(string, enum, rub)                             \
+            case enum:                                                          \
+                buffer[ptr] = enum;                                             \
+                ptr += command;                                                 \
+                CHECK_MARK(string)                                              \
+                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));    \
+                ptr += number;                                                  \
                 break;
             #include "jumps.h"
             #undef Define_Jumps
 
+    #undef CHAECK_MARK
+
             case ERR:
-                if(data[i].str[data[i].len - 1] == ':')
+                if(strchr(data[i].str, ':') != NULL)
                     break;
                 return UNKNOWN_COMMAND_NAME;
 

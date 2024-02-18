@@ -17,7 +17,7 @@ void stack_dump(struct Stack* stk, int LINE, const char* stk_name, const char* f
     printf("stack->data adress: %d\n", stk->data);
     printf("capacity - %d\nsize - %d\nstack:\n", stk->capacity, stk->size);
     for(int i = 0; i < stk->size; i++)
-        printf("*[%d] = %d  ", i, stk->data[i]);
+        printf("*[%d] = %f  ", i, stk->data[i]);
     for(int i = stk->size; i < stk->capacity; i++)
         printf("*[%d] = poison  ", i);
 
@@ -73,9 +73,9 @@ enum err stack_pop(struct Stack* stk, elem_t* pop_el)
 
     *(stk->data + stk->size) = poison;
 
-    enum err res = capacity_down(stk);
+    /*enum err res = capacity_down(stk);
     if(res != SUCCESS)
-        return res;
+        return res;*/
 
     return SUCCESS;
 }

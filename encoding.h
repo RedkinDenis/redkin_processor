@@ -5,7 +5,7 @@ enum byte_codes
 {
     ERR = 100,
     PUSH = 1,                 // 2
-    ADD = 2,                  // 1
+    ADD = 22,                  // 1
     SUB = 3,                  // 1
     OUT = 4,                  // 1
     HET = 19,                 // 1
