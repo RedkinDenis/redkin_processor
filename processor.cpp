@@ -43,7 +43,7 @@ enum err proc_free(struct processor* proc);
 
 int main(int argc, char* argv[])
 {
-    enum err res = (enum err)system("ass.exe");
+    enum err res = (enum err)system("ass.exe fib.txt fib.bin");
 
     /*if(res != SUCCESS)
     {
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
     printf("-------------------------------------------------------------------------------------\n");
 
 
-    char* inpName = (char*)"factorial.bin";
+    char* inpName = (char*)"fib.bin";
 
     if(argc == 2)
         inpName = argv[1];
@@ -129,7 +129,7 @@ enum err executor(struct processor* proc)
 
                 if((cmd & 0xE0) == 0)
                 {
-                    // в стек из даты
+
                     PUSH(cmd_stk, proc->data[proc->ip + command])
                     proc->ip += (command + number);
                 }
@@ -138,7 +138,7 @@ enum err executor(struct processor* proc)
                 {
                     if(proc->data[proc->ip + command] > 4)
                         return UNKNOWN_REGISTER_NAME;
-                    //в стек из регистра
+
                     PUSH(cmd_stk, proc->reg[(int)proc->data[proc->ip + command] - 1])
                     proc->ip += (command + reg);
                 }
@@ -149,13 +149,13 @@ enum err executor(struct processor* proc)
                     {
                         if(proc->data[proc->ip + command] > 4)
                             return UNKNOWN_REGISTER_NAME;
-                        // в стек из оперативки по адресу из регистра
+
                         PUSH(cmd_stk, proc->RAM[(int)proc->reg[(int)proc->data[proc->ip + command] - 1]])
                         proc->ip += (command + reg);
                     }
                     else
                     {
-                        // в стек из оперативки по адресу из даты
+
                         PUSH(cmd_stk, proc->RAM[(int)proc->data[proc->ip + command]])
                         proc->ip += (command + number);
                     }
@@ -166,20 +166,19 @@ enum err executor(struct processor* proc)
 
                 if((cmd & 0x40) == 0x40)
                 {
-                    // из стека в регистр
+
                     POP(cmd_stk, proc->reg[(int)proc->data[proc->ip + command] - 1])
-                    //PROC_DUMP(proc, executor)
                     proc->ip += (command + reg);
                 }
                 else if((cmd & 0x20) == 0x20)
                 {
-                    // из стека в оперативу по числовому
+
                     POP(cmd_stk, proc->RAM[(int)proc->data[proc->ip + command]])
                     proc->ip += (command + number);
                 }
                 else if((cmd & 0xA0) == 0xA0)
                 {
-                    // из стека в оперативу по значению регистра
+
                     POP(cmd_stk, proc->RAM[(int)proc->reg[(int)proc->data[proc->ip + command] - 1]]);
                     proc->ip += (command + reg);
                 }
@@ -199,7 +198,7 @@ enum err executor(struct processor* proc)
             case OUT:
                 POP(cmd_stk, x)
                 proc->ip += command;
-                printf("\nresult - %f\n", x);
+                printf("\nresult - %d\n", x);
                 break;
             case HET:
                 stack_dtor(&(proc->cmd_stk));
@@ -358,4 +357,3 @@ enum err proc_free(struct processor* proc)
 
     return SUCCESS;
 }
-
