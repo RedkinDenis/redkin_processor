@@ -46,11 +46,11 @@ int main(int argc, char* argv[])
 {
     enum err res = (enum err)system("ass.exe qadr.txt qadr.bin");
 
-    /*if(res != SUCCESS)
+    if(res != SUCCESS)
     {
         printf("\nerror number %d in ass.exe\n", res);
         return res;
-    }*/
+    }
 
     printf("-------------------------------------------------------------------------------------\n");
     printf("-----------------------------------START_OF_PROGRAMM---------------------------------\n");
@@ -92,6 +92,8 @@ int main(int argc, char* argv[])
     check_result(proc_free)
 
     #undef check_result
+
+    return SUCCESS;
 }
 
 enum err executor(struct processor* proc)
@@ -103,15 +105,19 @@ enum err executor(struct processor* proc)
                     memcpy(&reg, &buf, sizeof(elem_t));
 
     #define PUSH(stk_type, reg)                                \
-                    memcpy(&buf, &reg, sizeof(elem_t));           \
+                    temp = (elem_t)reg;                            \
+                    memcpy(&buf, &temp, sizeof(elem_t));           \
                     res = stack_push(&(proc->stk_type), &buf); \
                     if(res != SUCCESS)                         \
                         return res;
 
     elem_t x = 0, x1 = 0, x2 = 0;
     char cmd = 0;
+    int liter;
     elem_t buf = 0;
     err res;
+
+    elem_t temp = 0;
 
     int running = 1;
 
@@ -119,6 +125,7 @@ enum err executor(struct processor* proc)
     {
         //printf("\n=========================================================================\n");
         //PROC_DUMP(proc, executor)
+
 
         cmd = proc->data[proc->ip];
 
@@ -130,7 +137,6 @@ enum err executor(struct processor* proc)
 
                 if((cmd & 0xE0) == 0)
                 {
-
                     PUSH(cmd_stk, proc->data[proc->ip + command])
                     proc->ip += (command + number);
                 }
@@ -206,18 +212,22 @@ enum err executor(struct processor* proc)
             case OUT:
                 POP(cmd_stk, x)
                 proc->ip += command;
-                printf("\nresult - %d\n", x);
+                printf("\nresult - %f\n", x);
                 break;
+
             case OUTC:
-                POP(cmd_stk, x)
+                POP(cmd_stk, temp)
+                liter = (int)temp;
                 proc->ip += command;
-                printf("%c", x);
+                printf("%c", liter);
                 break;
+
             case HLT:
                 stack_dtor(&(proc->cmd_stk));
                 proc->ip += command;
                 running = 0;
                 break;
+
             case IN:
                 printf("\nenter push element ");
                 scanf("%d", &x);
@@ -246,7 +256,10 @@ enum err executor(struct processor* proc)
                 //proc->ip = proc->data[proc->ip + command];
                 break;
             case RET:
-                POP(call_stk, proc->ip)
+                POP(call_stk, temp)
+                //printf("\n temp - %f", temp);
+                proc->ip = (int)temp;
+                //printf("\n int ip -> %d", proc->ip);
                 break;
 
             default:
@@ -293,10 +306,10 @@ enum err fill_proc(struct processor* proc, FILE* read, int fsize)
     if(res != SUCCESS)
         return res;
 
-    temp1 = (elem_t*)calloc(4, sizeof(elem_t));
+    elem_t* temp2 = (elem_t*)calloc(4, sizeof(elem_t));
     if(temp1 == NULL)
         return CALLOC_ERROR;
-    proc->reg = temp1;
+    proc->reg = temp2;
 
     int x = fread(proc->data, sizeof(char), fsize, read);
 
@@ -328,10 +341,10 @@ enum err proc_dump(struct processor* proc, int LINE, const char* proc_name, cons
     {
         printf("processor->data adress: %d\n", proc->data);
 
-        printf("ax - %d \n"
-               "bx - %d \n"
-               "cx - %d \n"
-               "dx - %d \n", proc->reg[0], proc->reg[1], proc->reg[2], proc->reg[3]);
+        printf("ax - %f \n"
+               "bx - %f \n"
+               "cx - %f \n"
+               "dx - %f \n", proc->reg[0], proc->reg[1], proc->reg[2], proc->reg[3]);
 
 
         int i = 0;

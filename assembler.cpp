@@ -31,8 +31,8 @@ struct mark
 
 int main(int argc, char* argv[])
 {
-    char* inpName = (char*)"qadr.txt";
-    char* outName = (char*)"qadr.bin";
+    char* inpName = (char*)"word_code1.txt";
+    char* outName = (char*)"word_code1.bin";
 
     if(argc == 3)
     {
@@ -395,4 +395,6 @@ enum err assembler(FILE* out, struct line* data, int nLines)
         printf(" %d", (uint8_t)buffer[i]);
     printf("\n");
     fwrite(buffer, sizeof(char), ptr, out);
+
+    return SUCCESS;
 }
