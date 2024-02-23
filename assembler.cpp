@@ -192,7 +192,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
         {
             case PUSH:
                 //printf("%d ", isdigit(*(data[i].str + strlen("push "))));
-                if(isdigit(*(data[i].str + strlen("push "))))
+                if(isdigit(*(data[i].str + strlen("push "))) || ((*(data[i].str + strlen("push ")) == '-') && isdigit(*(data[i].str + strlen("push -")))) )
                 {
                     sscanf(data[i].str + strlen("push "), "%d", &num);
                     buffer[ptr] = PUSH;
