@@ -1,0 +1,163 @@
+push 0
+pop ax
+push 0
+pop bx
+push 2
+pop cx
+
+push ax
+push 0
+jne quadratic:
+
+push bx
+push 0
+jne linear:
+
+push cx
+push 0
+jne no_roots:
+
+jump inf_roots:
+
+quadratic:
+    call solve_quadratic:
+    hlt
+
+linear:
+    call solve_linear:
+    push dx
+    out
+    hlt
+
+no_roots:
+    call print_no_roots:
+    hlt
+
+inf_roots:
+    call print_inf_roots:
+    hlt
+
+$get a, b, c from ax, bx and cx
+$put D to dx
+discriminant:
+    push bx      $calculate b^2
+    push bx
+    mul
+    push 4
+    push ax      $calculate 4ac
+    push cx
+    mul
+    mul
+    sub         $calculate D = b^2 - 4ac
+    pop dx
+    ret
+
+solve_quadratic:
+    call discriminant:
+
+    push dx
+    push 0
+    jb quad_no_roots:
+
+    push dx
+    push 0
+    je quad_one_root:
+
+    push dx
+    push 0
+    ja quad_two_roots:
+
+    quad_one_root:
+        push 0
+        push bx
+        sub
+        push 2
+        push ax
+        mul
+        div
+        out
+        ret
+
+    quad_no_roots:
+        call print_no_roots:
+        ret
+
+    quad_two_roots:
+        push 0
+        push bx
+        sub
+        push dx
+        sqrt
+        sub
+        push ax
+        push 2
+        mul
+        div
+        out
+
+        push 0
+        push bx
+        sub
+        push dx
+        sqrt
+        add
+        push ax
+        push 2
+        mul
+        div
+        out
+        ret
+    ret
+
+solve_linear:
+    push 0
+    push cx
+    sub
+    push bx
+    div
+    pop dx
+    ret
+
+print_no_roots:
+    push 10
+    push 115
+    push 116
+    push 111
+    push 111
+    push 114
+    push 32
+    push 111
+    push 78
+    outc
+    outc
+    outc
+    outc
+    outc
+    outc
+    outc
+    outc
+    outc
+    ret
+
+print_inf_roots:
+    push 10
+    push 115
+    push 116
+    push 111
+    push 111
+    push 114
+    push 32
+    push 102
+    push 110
+    push 73
+    outc
+    outc
+    outc
+    outc
+    outc
+    outc
+    outc
+    outc
+    outc
+    outc
+    ret

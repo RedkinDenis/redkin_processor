@@ -8,7 +8,7 @@ enum byte_codes
     ADD = 22,                  // 1
     SUB = 3,                  // 1
     OUT = 4,                  // 1
-    HET = 19,                 // 1
+    HLT = 19,                 // 1
     DIV = 5,                  // 1
     MUL = 6,                  // 1
     IN = 7,                   // 2
@@ -20,13 +20,15 @@ enum byte_codes
     RAMRPOP = 162,            // 2
     JMP = 8,                 // 2
     JB = 9,                  // 2
-    JBE = 10,
+    JBE = 10,                // 2
     JA = 11,                 // 2
     JAE = 12,               // 2
     JE = 13,                // 2
     JNE = 14,               // 2
     CALL = 15,              // 2
     RET = 16,                // 1
+    OUTC = 17,               // 1
+    SQRT = 18,               // 1
     ax = 1,
     bx = 2,
     cx = 3,

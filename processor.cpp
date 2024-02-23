@@ -4,6 +4,7 @@
 #include <malloc.h>
 #include <assert.h>
 #include <stdint.h>
+#include <math.h>
 
 #include "input_output.h"
 #include "stack.h"
@@ -43,7 +44,7 @@ enum err proc_free(struct processor* proc);
 
 int main(int argc, char* argv[])
 {
-    enum err res = (enum err)system("ass.exe fib.txt fib.bin");
+    enum err res = (enum err)system("ass.exe qadr.txt qadr.bin");
 
     /*if(res != SUCCESS)
     {
@@ -56,7 +57,7 @@ int main(int argc, char* argv[])
     printf("-------------------------------------------------------------------------------------\n");
 
 
-    char* inpName = (char*)"fib.bin";
+    char* inpName = (char*)"qadr.bin";
 
     if(argc == 2)
         inpName = argv[1];
@@ -195,12 +196,24 @@ enum err executor(struct processor* proc)
             #include "math_comm.h"
             #undef MATH_COMM
 
+            case SQRT:
+                POP(cmd_stk, x)
+                x = (elem_t)sqrt(x);
+                proc->ip += command;
+                PUSH(cmd_stk, x)
+                break;
+
             case OUT:
                 POP(cmd_stk, x)
                 proc->ip += command;
                 printf("\nresult - %d\n", x);
                 break;
-            case HET:
+            case OUTC:
+                POP(cmd_stk, x)
+                proc->ip += command;
+                printf("%c", x);
+                break;
+            case HLT:
                 stack_dtor(&(proc->cmd_stk));
                 proc->ip += command;
                 running = 0;

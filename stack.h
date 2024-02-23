@@ -9,7 +9,7 @@
 
 typedef int elem_t;
 
-static const elem_t poison = 2147483647;
+static const elem_t poison = 0xDEAD;
 
 struct Stack
 {

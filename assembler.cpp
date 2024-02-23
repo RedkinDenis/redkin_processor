@@ -31,8 +31,8 @@ struct mark
 
 int main(int argc, char* argv[])
 {
-    char* inpName = (char*)"factorial.txt";
-    char* outName = (char*)"factorial.bin";
+    char* inpName = (char*)"qadr.txt";
+    char* outName = (char*)"qadr.bin";
 
     if(argc == 3)
     {
@@ -97,8 +97,16 @@ enum err assembler(FILE* out, struct line* data, int nLines)
 
     int ptr = 0;
 
+
     for(int i = 0; i < nLines; i++)
     {
+        while(*(data[i].str) == ' ')
+        {
+            data[i].str++;
+            data[i].len -= 1;
+        }
+
+
         for(int k = 0; k < data[i].len; k++)
         {
             if(data[i].str[k] == ' ')
@@ -107,10 +115,15 @@ enum err assembler(FILE* out, struct line* data, int nLines)
                 len++;
                 k = data[i].len;
             }
-            if(data[i].str[k] == '$')
+            if(data[i].str[k] == '$' && (k != 0))
             {
-                data[i].str[k] = '\0';
-                k = data[i].len;
+                //data[i].str[k + 1] = '$';
+
+                while(k < data[i].len)
+                {
+                    data[i].str[k] = '\0';
+                    k++;
+                }
             }
         }
     }
@@ -130,14 +143,14 @@ enum err assembler(FILE* out, struct line* data, int nLines)
 
         comm = comm_det(data[i].str);
         //printf("cmd - %d    ", comm);
-        if(comm == ADD || comm == SUB || comm == MUL || comm == DIV || comm == HET || comm == OUT || comm == RET)
+        if(comm == ADD || comm == SUB || comm == MUL || comm == DIV || comm == HLT || comm == OUT || comm == RET || comm == OUTC || comm == SQRT)
             ptr += command;
 
         else if(comm == ERR)
         {
-            if(data[i].str[data[i].len - 1] == ':')
+            if(strchr(data[i].str, ':') != NULL || strchr(data[i].str, '$') != NULL)
             {
-                for(int j = 0; j < data[i].len; j++)
+                for(int j = 0; data[i].str[j - 1] != ':'; j++)
                     marks[marks_len].num += data[i].str[j];
 
                 marks[marks_len].adress = ptr;
@@ -169,7 +182,12 @@ enum err assembler(FILE* out, struct line* data, int nLines)
     ptr = 0;
     for(int i = 0; i < nLines; i++)
     {
+        //printf("i - %d, ", i);
+
         comm = comm_det(data[i].str);
+
+        //printf("cmd - %d \n", comm);
+
         switch(comm)
         {
             case PUSH:
@@ -306,10 +324,10 @@ enum err assembler(FILE* out, struct line* data, int nLines)
                 break;
 
     #define CHECK_MARK(cmd)                                  \
-    if(data[i].str[data[i].len - 1] == ':')                  \
-    {                                                        \
+    if(strchr(data[i].str + strlen(cmd) + 1, ':') != NULL)                  \
+    {                                                       \
         num = 0;                                             \
-        for(int k = strlen(cmd); k < data[i].len; k++)       \
+        for(int k = strlen(cmd); data[i].str[k - 1] != ':'; k++)       \
             num += data[i].str[k];                           \
                                                              \
         num1 = num;                                          \
@@ -358,11 +376,13 @@ enum err assembler(FILE* out, struct line* data, int nLines)
     #undef CHAECK_MARK
 
             case ERR:
-                if(strchr(data[i].str, ':') != NULL)
+                if(strchr(data[i].str, ':') != NULL || strchr(data[i].str, '$') != NULL || strlen(data[i].str) == 0)
                     break;
                 return UNKNOWN_COMMAND_NAME;
 
             default:
+                /*if(comm == HLT)
+                    printf("%d\n", data[i].len);*/
                 buffer[ptr] = (char)comm;
                 ptr += command;
                 break;

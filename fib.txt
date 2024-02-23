@@ -1,36 +1,37 @@
-push 5
+push 6
 call fib:
 out
-het
-fib:
-pop ax
-push ax
-push 2
-jbe end:
-push ax
-push 3
-sub
-pop ax
-push 1
-push 1
-pop bx
-pop cx
-cicl:
-push ax
-push 1
-sub
-pop ax
-push cx
-push cx
-push bx
-add
-pop cx
-pop bx
-push ax
-push 0
-jae cicl:
-push cx
-ret
-end:
-push 1
-ret
+hlt
+    fib:
+        pop ax
+        push ax       $check 1 or 2
+        push 2
+        jbe end:
+    push ax
+    push 3
+    sub
+
+    pop ax
+    push 1
+    push 1
+    pop bx
+    pop cx
+        cicl:
+        push ax
+        push 1
+        sub
+        pop ax
+        push cx          $main cicle
+        push cx
+        push bx
+        add
+        pop cx
+        pop bx
+        push ax
+        push 0
+        jae cicl:
+    push cx
+    ret
+        end:
+        push 1     $case 1 or 2
+        ret
