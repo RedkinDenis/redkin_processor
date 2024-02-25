@@ -1,11 +1,8 @@
 #ifndef STACK_H
 #define STACK_H
 
-#define GET_VARIABLE_NAME(variable) #variable
-
-#define STACK_DUMP(stk, func_name) stack_dump(&stk, __LINE__, GET_VARIABLE_NAME(stk), __FILE__, GET_VARIABLE_NAME(func_name));
-
 #include "err_codes.h"
+#include "DSL.h"
 
 typedef float elem_t;
 

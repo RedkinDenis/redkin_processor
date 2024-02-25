@@ -12,7 +12,8 @@ enum err
     NULL_INSTEAD_PTR = 7,
     CALLOC_ERROR = 8,
     OPEN_ERROR = 9,
-    MARK_NOT_FOUND = 10
+    MARK_NOT_FOUND = 10,
+    PROC_NOT_INIT = 11
 };
 
 #endif //ERR_CODES_H

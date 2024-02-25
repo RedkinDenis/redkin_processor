@@ -10,16 +10,14 @@
 #include "stack.h"
 #include "encoding.h"
 #include "err_codes.h"
-
-#define PROC_DUMP(proc, func_name) proc_dump(proc, __LINE__, GET_VARIABLE_NAME(proc), __FILE__, GET_VARIABLE_NAME(func_name));
+#include "DSL.h"
 
 struct processor
 {
     char* data = {};
     int data_size;
     int ip = 0;
-    elem_t* reg = 0;
-    /*int ax  = 0, bx = 0, cx = 0, dx = 0;*/
+    elem_t* reg = 0;   //registers ax, bx, cx, dx
     elem_t* RAM = 0;
     struct Stack cmd_stk = {};
     struct Stack call_stk = {};
@@ -52,9 +50,7 @@ int main(int argc, char* argv[])
         return res;
     }
 
-    printf("-------------------------------------------------------------------------------------\n");
-    printf("-----------------------------------START_OF_PROGRAMM---------------------------------\n");
-    printf("-------------------------------------------------------------------------------------\n");
+    PRINT_(START)
 
 
     char* inpName = (char*)"qadr.bin";
@@ -74,14 +70,6 @@ int main(int argc, char* argv[])
 
     struct processor processor = {};
 
-    #define check_result(func)                  \
-    if(res != SUCCESS)                          \
-    {                                           \
-        printf("\nerror in " #func " %d \n", res);     \
-        return res;                             \
-    }
-
-
     res = fill_proc(&processor, read, fsize);
     check_result(fill_proc)
 
@@ -91,26 +79,11 @@ int main(int argc, char* argv[])
     proc_free(&processor);
     check_result(proc_free)
 
-    #undef check_result
-
     return SUCCESS;
 }
 
 enum err executor(struct processor* proc)
 {
-    #define POP(stk_type, reg)                                 \
-                    res = stack_pop(&(proc->stk_type), &buf);  \
-                    if(res != SUCCESS)                         \
-                       return res;                             \
-                    memcpy(&reg, &buf, sizeof(elem_t));
-
-    #define PUSH(stk_type, reg)                                \
-                    temp = (elem_t)reg;                            \
-                    memcpy(&buf, &temp, sizeof(elem_t));           \
-                    res = stack_push(&(proc->stk_type), &buf); \
-                    if(res != SUCCESS)                         \
-                        return res;
-
     elem_t x = 0, x1 = 0, x2 = 0;
     char cmd = 0;
     int liter;
@@ -128,9 +101,6 @@ enum err executor(struct processor* proc)
 
 
         cmd = proc->data[proc->ip];
-
-        //printf("\nip - %d, cmd - %d", proc->ip, cmd);
-
         switch(cmd & 0x1F)
         {
             case PUSH:
@@ -162,7 +132,6 @@ enum err executor(struct processor* proc)
                     }
                     else
                     {
-
                         PUSH(cmd_stk, proc->RAM[(int)proc->data[proc->ip + command]])
                         proc->ip += (command + number);
                     }
@@ -212,7 +181,7 @@ enum err executor(struct processor* proc)
             case OUT:
                 POP(cmd_stk, x)
                 proc->ip += command;
-                printf("\nresult - %f\n", x);
+                printf("\nOUT - %f\n", x);
                 break;
 
             case OUTC:
@@ -237,14 +206,14 @@ enum err executor(struct processor* proc)
             case JMP:
                 memcpy(&proc->ip, &proc->data[proc->ip + command], sizeof(int));
                 break;
-            #define Define_Jumps(rub, enum, operand) \
-            case enum:                        \
-                POP(cmd_stk, x1) \
-                POP(cmd_stk, x2) \
-                if(x1 operand x2)             \
-                    memcpy(&proc->ip, &proc->data[proc->ip + command], sizeof(int));\
-                else                                          \
-                    proc->ip += (command + number);            \
+            #define Define_Jumps(rub, enum, operand)                                 \
+            case enum:                                                               \
+                POP(cmd_stk, x1)                                                     \
+                POP(cmd_stk, x2)                                                     \
+                if(x1 operand x2)                                                    \
+                    memcpy(&proc->ip, &proc->data[proc->ip + command], sizeof(int)); \
+                else                                                                 \
+                    proc->ip += (command + number);                                  \
                 break;
             #include "jumps.h"
             #undef Define_Jumps
@@ -253,18 +222,13 @@ enum err executor(struct processor* proc)
                 x = proc->ip + command + number;
                 PUSH(call_stk, x)
                 memcpy(&proc->ip, &proc->data[proc->ip + command], sizeof(int));
-                //proc->ip = proc->data[proc->ip + command];
                 break;
             case RET:
                 POP(call_stk, temp)
-                //printf("\n temp - %f", temp);
                 proc->ip = (int)temp;
-                //printf("\n int ip -> %d", proc->ip);
                 break;
 
             default:
-                printf("\nerr in cmd %d", cmd);
-                printf("\nip - %d, cmd - %d, cmd & 0x1F - %d", proc->ip, cmd, (cmd & 0x1F));
                 return UNKNOWN_COMMAND_NAME;
                 break;
         }
@@ -306,20 +270,15 @@ enum err fill_proc(struct processor* proc, FILE* read, int fsize)
     if(res != SUCCESS)
         return res;
 
-    elem_t* temp2 = (elem_t*)calloc(4, sizeof(elem_t));
+    temp1 = (elem_t*)calloc(4, sizeof(elem_t));
     if(temp1 == NULL)
         return CALLOC_ERROR;
-    proc->reg = temp2;
+    proc->reg = temp1;
 
     int x = fread(proc->data, sizeof(char), fsize, read);
 
     proc->data_size = fsize;
 
-   // printf("\nfsize - %d\n", fsize);
-    //for(int i = 0; i < fsize; i++)
-      //  printf(" %d", proc->data[i]);
-
-    //PROC_DUMP(proc, fill_proc)
     assert(x == fsize);
     return SUCCESS;
 }
@@ -360,7 +319,7 @@ enum err proc_dump(struct processor* proc, int LINE, const char* proc_name, cons
         printf("\n");
     }
     else
-        printf("processor is not initialized \n");
+        return PROC_NOT_INIT;
 
     printf("ip = %d", proc->ip);
 

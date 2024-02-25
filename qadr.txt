@@ -1,8 +1,8 @@
-push 1
-pop ax
-push -4
-pop bx
 push 3
+pop ax
+push 5
+pop bx
+push 1
 pop cx
 
 push ax
