@@ -78,8 +78,19 @@ enum byte_codes comm_det(const char* comm)
     if(strcmp(comm, str) == 0)        \
         return enum;
     #include "command.h"
+    #undef Define_Command
+
+    return ERR;
+}
+
+enum byte_codes reg_det(const char* reg)
+{
+    #define Define_Command(str, enum) \
+    if(strncmp(reg, str, 2) == 0)    \
+        return enum;
     #include "registers.h"
     #undef Define_Command
+
     return ERR;
 }
 
@@ -163,179 +174,19 @@ enum err assembler(FILE* out, struct line* data, int nLines)
     {
         comm = comm_det(data[i].str);
 
-        switch(comm)
+        switch(comm & 0x1F)
         {
-            case PUSH:
-                if(isdigit(*(data[i].str + strlen("push "))) || ((*(data[i].str + strlen("push ")) == '-') && isdigit(*(data[i].str + strlen("push -")))) )
-                {
-                    sscanf(data[i].str + strlen("push "), "%d", &num);
-                    buffer[ptr] = PUSH;
-                }
-
-                else if(*(data[i].str + strlen("push ")) == '[' && strchr(data[i].str + strlen("push "), ']') != NULL)
-                    if(isdigit(*(data[i].str + strlen("push ["))))
-                    {
-                        sscanf(data[i].str + strlen("push "), "[%d]", &num);
-                        buffer[ptr] = RAMPUSH;
-                    }
-                    else if(*(data[i].str + strlen("push [a")) == 'x')
-                    {
-                        buffer[ptr] = RAMPUSHR;
-                        switch(*(data[i].str + strlen("push [")))
-                        {
-                            case 'a':
-                                num = ax;
-                                break;
-                            case 'b':
-                                num = bx;
-                                break;
-                            case 'c':
-                                num = cx;
-                                break;
-                            case 'd':
-                                num = dx;
-                                break;
-                            default:
-                                return UNKNOWN_REGISTER_NAME;
-                        }
-                        ptr += command;
-                        memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(char));
-                        ptr += reg;
-                        break;
-                    }
-                if(*(data[i].str + strlen("push a")) == 'x')
-                    {
-                        buffer[ptr] = RPUSH;
-                        switch(*(data[i].str + strlen("push ")))
-                        {
-                            case 'a':
-                                num = ax;
-                                break;
-                            case 'b':
-                                num = bx;
-                                break;
-                            case 'c':
-                                num = cx;
-                                break;
-                            case 'd':
-                                num = dx;
-                                break;
-                            default:
-                                return UNKNOWN_REGISTER_NAME;
-                        }
-                        ptr += command;
-                        memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(char));
-                        ptr += reg;
-                        break;
-                    }
-
-                ptr += command;
-                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));
-                ptr += number;
+            #define CMD_GEN(str, NAME, assm_code, proc_code) \
+            case NAME:                                       \
+                assm_code                                    \
                 break;
-
-            case POP:
-                if(*(data[i].str + strlen("pop ")) == '[' && strchr(data[i].str + strlen("push "), ']') != NULL)
-                    if(isdigit(*(data[i].str + strlen("pop ["))))
-                    {
-                        sscanf(data[i].str + strlen("pop "), "[%d]", &num);
-                        buffer[ptr] = RAMPOP;
-                    }
-                    else if(*(data[i].str + strlen("pop [a")) == 'x')
-                    {
-                        buffer[ptr] = RAMRPOP;
-                        switch(*(data[i].str + strlen("pop [")))
-                        {
-                            case 'a':
-                                num = ax;
-                                break;
-                            case 'b':
-                                num = bx;
-                                break;
-                            case 'c':
-                                num = cx;
-                                break;
-                            case 'd':
-                                num = dx;
-                                break;
-                            default:
-                                return UNKNOWN_REGISTER_NAME;
-                        }
-                        ptr += command;
-                        memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(char));
-                        ptr += reg;
-                        break;
-                    }
-                if(*(data[i].str + strlen("pop a")) == 'x')
-                    {
-                        buffer[ptr] = POP;
-                        switch(*(data[i].str + strlen("pop ")))
-                        {
-                            case 'a':
-                                num = ax;
-                                break;
-                            case 'b':
-                                num = bx;
-                                break;
-                            case 'c':
-                                num = cx;
-                                break;
-                            case 'd':
-                                num = dx;
-                                break;
-                            default:
-                                return UNKNOWN_REGISTER_NAME;
-                        }
-                        ptr += command;
-                        memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(char));
-                        ptr += reg;
-                        break;
-                    }
-                ptr += command;
-                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(char));
-                ptr += number;
-                break;
-
-            case JMP:
-                buffer[ptr] = JMP;
-                ptr += command;
-
-                CHECK_MARK("call")
-
-                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));
-                ptr += number;
-                break;
-
-            case CALL:
-                buffer[ptr] = CALL;
-                ptr += command;
-
-                CHECK_MARK("call")
-
-                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));
-                ptr += number;
-                break;
-
-            #define Define_Jumps(string, enum, rub)                             \
-            case enum:                                                          \
-                buffer[ptr] = enum;                                             \
-                ptr += command;                                                 \
-                CHECK_MARK(string)                                              \
-                memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));    \
-                ptr += number;                                                  \
-                break;
-            #include "jumps.h"
-            #undef Define_Jumps
+            #include "CMD_GEN.h"
 
             case ERR:
                 if(strchr(data[i].str, ':') != NULL || strchr(data[i].str, '$') != NULL || strlen(data[i].str) == 0)
                     break;
+                //printf("%d", comm);
                 return UNKNOWN_COMMAND_NAME;
-
-            default:
-                buffer[ptr] = (char)comm;
-                ptr += command;
-                break;
         }
     }
 

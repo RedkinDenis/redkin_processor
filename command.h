@@ -1,7 +1,4 @@
-Define_Command("err", ERR)/*,
-{
-
-})*/
+Define_Command("err", ERR)
 Define_Command("push", PUSH)
 Define_Command("add", ADD)
 Define_Command("sub", SUB)

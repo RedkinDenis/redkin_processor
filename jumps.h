@@ -1,4 +1,3 @@
-//Define_Jumps("jump", JMP, rub)
 Define_Jumps("jb", JB, >)
 Define_Jumps("jbe", JBE, >=)
 Define_Jumps("ja", JA, <)

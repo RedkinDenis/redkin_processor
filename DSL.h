@@ -48,3 +48,24 @@
     printf("-----------------------------------START_OF_PROGRAMM---------------------------------\n");  \
     printf("-------------------------------------------------------------------------------------\n");
 
+#define ASSM_JUMPS(string, enum)                                    \
+    buffer[ptr] = enum;                                             \
+    ptr += command;                                                 \
+    CHECK_MARK(string)                                              \
+    memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(int));    \
+    ptr += number;
+
+#define PROC_JUMPS(enum, operand)                                        \
+    POP(cmd_stk, x1)                                                     \
+    POP(cmd_stk, x2)                                                     \
+    if(x1 operand x2)                                                    \
+        memcpy(&proc->ip, &proc->data[proc->ip + command], sizeof(int)); \
+    else                                                                 \
+        proc->ip += (command + number);
+
+#define MATH_COMM(enum, operand) \
+    POP(cmd_stk, x1)             \
+    POP(cmd_stk, x2)             \
+    x = x2 operand x1;           \
+    proc->ip += command;         \
+    PUSH(cmd_stk, x)

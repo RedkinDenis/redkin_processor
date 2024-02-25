@@ -42,13 +42,14 @@ enum err proc_free(struct processor* proc);
 
 int main(int argc, char* argv[])
 {
-    enum err res = (enum err)system("ass.exe qadr.txt qadr.bin");
+    enum err res;
+    /*res = (enum err)system("ass.exe qadr.txt qadr.bin");
 
     if(res != SUCCESS)
     {
         printf("\nerror number %d in ass.exe\n", res);
         return res;
-    }
+    }*/
 
     PRINT_(START)
 
@@ -99,134 +100,14 @@ enum err executor(struct processor* proc)
         //printf("\n=========================================================================\n");
         //PROC_DUMP(proc, executor)
 
-
         cmd = proc->data[proc->ip];
         switch(cmd & 0x1F)
         {
-            case PUSH:
-
-                if((cmd & 0xE0) == 0)
-                {
-                    PUSH(cmd_stk, proc->data[proc->ip + command])
-                    proc->ip += (command + number);
-                }
-
-                else if((cmd & 0xE0) == 0x40)
-                {
-                    if(proc->data[proc->ip + command] > 4)
-                        return UNKNOWN_REGISTER_NAME;
-
-                    PUSH(cmd_stk, proc->reg[(int)proc->data[proc->ip + command] - 1])
-                    proc->ip += (command + reg);
-                }
-
-                else if((cmd & 0x20) == 0x20)
-                {
-                    if((cmd & 0x80) == 0x80)
-                    {
-                        if(proc->data[proc->ip + command] > 4)
-                            return UNKNOWN_REGISTER_NAME;
-
-                        PUSH(cmd_stk, proc->RAM[(int)proc->reg[(int)proc->data[proc->ip + command] - 1]])
-                        proc->ip += (command + reg);
-                    }
-                    else
-                    {
-                        PUSH(cmd_stk, proc->RAM[(int)proc->data[proc->ip + command]])
-                        proc->ip += (command + number);
-                    }
-                }
+            #define CMD_GEN(str, NAME, assm_code, proc_code) \
+            case NAME:                                       \
+                proc_code                                    \
                 break;
-
-            case (POP & 0x1F):
-
-                if((cmd & 0x40) == 0x40)
-                {
-
-                    POP(cmd_stk, proc->reg[(int)proc->data[proc->ip + command] - 1])
-                    proc->ip += (command + reg);
-                }
-                else if((cmd & 0x20) == 0x20)
-                {
-
-                    POP(cmd_stk, proc->RAM[(int)proc->data[proc->ip + command]])
-                    proc->ip += (command + number);
-                }
-                else if((cmd & 0xA0) == 0xA0)
-                {
-
-                    POP(cmd_stk, proc->RAM[(int)proc->reg[(int)proc->data[proc->ip + command] - 1]]);
-                    proc->ip += (command + reg);
-                }
-                break;
-
-            #define MATH_COMM(enum, operand) \
-            case enum:                       \
-                POP(cmd_stk, x1)             \
-                POP(cmd_stk, x2)             \
-                x = x2 operand x1;           \
-                proc->ip += command;         \
-                PUSH(cmd_stk, x)             \
-                break;
-            #include "math_comm.h"
-            #undef MATH_COMM
-
-            case SQRT:
-                POP(cmd_stk, x)
-                x = (elem_t)sqrt(x);
-                proc->ip += command;
-                PUSH(cmd_stk, x)
-                break;
-
-            case OUT:
-                POP(cmd_stk, x)
-                proc->ip += command;
-                printf("\nOUT - %f\n", x);
-                break;
-
-            case OUTC:
-                POP(cmd_stk, temp)
-                liter = (int)temp;
-                proc->ip += command;
-                printf("%c", liter);
-                break;
-
-            case HLT:
-                stack_dtor(&(proc->cmd_stk));
-                proc->ip += command;
-                running = 0;
-                break;
-
-            case IN:
-                printf("\nenter push element ");
-                scanf("%d", &x);
-                PUSH(cmd_stk, x)
-                proc->ip += command;
-                break;
-            case JMP:
-                memcpy(&proc->ip, &proc->data[proc->ip + command], sizeof(int));
-                break;
-            #define Define_Jumps(rub, enum, operand)                                 \
-            case enum:                                                               \
-                POP(cmd_stk, x1)                                                     \
-                POP(cmd_stk, x2)                                                     \
-                if(x1 operand x2)                                                    \
-                    memcpy(&proc->ip, &proc->data[proc->ip + command], sizeof(int)); \
-                else                                                                 \
-                    proc->ip += (command + number);                                  \
-                break;
-            #include "jumps.h"
-            #undef Define_Jumps
-
-            case CALL:
-                x = proc->ip + command + number;
-                PUSH(call_stk, x)
-                memcpy(&proc->ip, &proc->data[proc->ip + command], sizeof(int));
-                break;
-            case RET:
-                POP(call_stk, temp)
-                proc->ip = (int)temp;
-                break;
+            #include "CMD_GEN.h"
 
             default:
                 return UNKNOWN_COMMAND_NAME;
