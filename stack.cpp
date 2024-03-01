@@ -73,9 +73,9 @@ enum err stack_pop(struct Stack* stk, elem_t* pop_el)
 
     *(stk->data + stk->size) = poison;
 
-    /*enum err res = capacity_down(stk);
+    enum err res = capacity_down(stk);
     if(res != SUCCESS)
-        return res;*/
+        return res;
 
     return SUCCESS;
 }

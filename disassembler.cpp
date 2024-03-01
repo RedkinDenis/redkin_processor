@@ -5,15 +5,17 @@
 
 #include "input_output.h"
 #include "encoding.h"
+#include "DSL.h"
+#include "C:\Users\vp717\Desktop\ilab\err_codes.h"
 
-void fill_data(char* data, FILE* read, int fsize);
+err fill_data(char** data, FILE* read, int fsize);
 
-void dis_assembler(FILE* out, char* data);
+err dis_assembler(FILE* out, int fsize, char* data);
 
 int main(int argc, char* argv[])
 {
-    char* inpName = (char*)"byte_code1.bin";
-    char* outName = (char*)"word_code1.txt";
+    char* inpName = (char*)"qadr.bin";
+    char* outName = (char*)"out.txt";
 
     if(argc == 3)
     {
@@ -35,9 +37,11 @@ int main(int argc, char* argv[])
     int fsize = GetFileSize(read);
 
     char* data = 0;
-    fill_data(data, read, fsize);
+    fill_data(&data, read, fsize);
 
-    FILE* out = fopen(outName, "w");
+
+
+    FILE* out = fopen(outName, "wb");
     if(out == NULL)
     {
         printf("out file open error");
@@ -46,119 +50,57 @@ int main(int argc, char* argv[])
 
     fclose(read);
 
-    //PrintData(data, n);
-
-    dis_assembler(out, data);
+    dis_assembler(out, fsize, data);
 
     fclose(out);
 }
 
-void fill_data(char* data, FILE* read, int fsize)
+err fill_data(char** data, FILE* read, int fsize)
 {
-    data = (char*)calloc(fsize + 1, sizeof(char));
+    if (data == NULL || read == NULL)
+        return NULL_INSTEAD_PTR;
 
-    int x = fread(data, sizeof(char), fsize, read);
+    char* data_temp = (char*)calloc(fsize + 1, sizeof(char));
+    if (data_temp == NULL)
+        return CALLOC_ERROR;
+
+    *data = data_temp;
+
+    int x = fread(*data, sizeof(char), fsize, read);
 
     assert(x == fsize);
+
+    return SUCCESS;
 }
 
-/*void dis_assembler(FILE* out, char* data)
+err dis_assembler(FILE* out, int fsize, char* data)
 {
-    int j = 0;
+    if (data == NULL || data == NULL)
+        return NULL_INSTEAD_PTR;
+
+    int ptr = 0;
+    char cmd = data[ptr];
+
     int num = 0;
-    int num1 = 0;
 
-    for(int i = 0; i < nLines; i++)
+    while(ptr < fsize)
     {
-        sscanf(data[i].str, "%d %d", &num, &num1);
-
-        switch(num)
+        switch((data[ptr]) & 0x1F)
         {
-            case PUSH:
-                fprintf(out, "%s %d\n", "push", num1);                     // перенести свитчи в функцию
+            #define CMD_GEN(str, NAME, assm_code, proc_code, dis_code) \
+            case NAME:                                                 \
+                fprintf(out, str);                                     \
+                ptr += command;                                        \
+                dis_code                                               \
+                fprintf(out, "\n");                                    \
                 break;
-            case ADD:
-                fprintf(out, "%s\n", "add");
-                break;
-            case SUB:
-                fprintf(out, "%s\n", "sub");
-                break;
-            case OUT:
-                fprintf(out, "%s\n", "out");
-                break;
-            case HET:
-                fprintf(out, "%s\n", "het");
-                break;
-            case DIV:
-                fprintf(out, "%s\n", "div");
-                break;
-            case MUL:
-                fprintf(out, "%s\n", "mul");
-                break;
-            case IN:
-                fprintf(out, "%s\n", "in");
-                break;
-            case RPUSH:
-                switch(num1)
-                    case ax:
-                        fprintf(out, "%s\n", "rpush ax");
-                        break;
-                    case bx:
-                        fprintf(out, "%s\n", "rpush bx");
-                        break;
-                    case cx:
-                        fprintf(out, "%s\n", "rpush cx");
-                        break;
-                    case dx:
-                        fprintf(out, "%s\n", "rpush dx");
-                        break;
-                    default:
-                        printf("unknown command");
-                        return;
-                        break;
-                break;
-            case POP:
-                switch(num1)
-                    case ax:
-                        fprintf(out, "%s\n", "pop ax");
-                        break;
-                    case bx:
-                        fprintf(out, "%s\n", "pop bx");
-                        break;
-                    case cx:
-                        fprintf(out, "%s\n", "pop cx");
-                        break;
-                    case dx:
-                        fprintf(out, "%s\n", "pop dx");
-                        break;
-                    default:
-                        printf("unknown command");
-                        return;
-                        break;
-                break;
+            #include "CMD_GEN.h"
             default:
-                printf("unknown command");
-                return;
-                break;
+                return UNKNOWN_COMMAND_NAME;
         }
+        cmd = data[ptr];
     }
-}*/
-
-void dis_assembler(FILE* out, char* data)
-{
-    int i = 0;
-    while(data[i] != '\0');
-    {
-        switch((int)data[i])
-        {
-            #define Define_Command(str, enum) \
-            case enum:                        \
-                fprintf(out, str "\n");       \
-                break;
-            #include "command.h"
-            #undef Define_Command
-        }
-        i++;
-    }
+    return SUCCESS;
 }
+
 

@@ -7,10 +7,10 @@
 #include <math.h>
 
 #include "input_output.h"
-#include "stack.h"
 #include "encoding.h"
-#include "err_codes.h"
+#include "C:\Users\vp717\Desktop\ilab\err_codes.h"
 #include "DSL.h"
+#include "stack.h"
 
 struct processor
 {
@@ -23,33 +23,29 @@ struct processor
     struct Stack call_stk = {};
 };
 
-enum step
-{
-    command = 1,
-    number = 4,
-    reg = 1
-};
 
-enum err fill_proc(struct processor* proc, FILE* read, int fsize);
 
-enum err executor(struct processor* proc);
+err fill_proc(struct processor* proc, FILE* read, int fsize);
 
-enum err proc_dump(struct processor* proc, int LINE, const char* proc_name, const char* file_name, const char* func_name);
+err executor(struct processor* proc);
 
-enum err proc(struct processor* cmd_stk);
+err proc_dump(struct processor* proc, int LINE, const char* proc_name, const char* file_name, const char* func_name);
 
-enum err proc_free(struct processor* proc);
+err proc(struct processor* cmd_stk);
+
+err proc_free(struct processor* proc);
 
 int main(int argc, char* argv[])
 {
-    enum err res;
-    /*res = (enum err)system("ass.exe qadr.txt qadr.bin");
+    err res;
+   /* res = (err)system("ass.exe qadr.txt qadr.bin");
 
     if(res != SUCCESS)
     {
         printf("\nerror number %d in ass.exe\n", res);
         return res;
-    }*/
+    }
+*/
 
     PRINT_(START)
 
@@ -83,7 +79,7 @@ int main(int argc, char* argv[])
     return SUCCESS;
 }
 
-enum err executor(struct processor* proc)
+err executor(struct processor* proc)
 {
     elem_t x = 0, x1 = 0, x2 = 0;
     char cmd = 0;
@@ -103,9 +99,9 @@ enum err executor(struct processor* proc)
         cmd = proc->data[proc->ip];
         switch(cmd & 0x1F)
         {
-            #define CMD_GEN(str, NAME, assm_code, proc_code) \
-            case NAME:                                       \
-                proc_code                                    \
+            #define CMD_GEN(str, NAME, assm_code, proc_code, dis_code) \
+            case NAME:                                                 \
+                proc_code                                              \
                 break;
             #include "CMD_GEN.h"
 
@@ -120,7 +116,7 @@ enum err executor(struct processor* proc)
     return SUCCESS;
 }
 
-enum err proc(struct processor* proc)
+err proc(struct processor* proc)
 {
     if(proc == NULL)
         return NULL_INSTEAD_PTR;
@@ -128,7 +124,7 @@ enum err proc(struct processor* proc)
     return executor(proc);
 }
 
-enum err fill_proc(struct processor* proc, FILE* read, int fsize)
+err fill_proc(struct processor* proc, FILE* read, int fsize)
 {
     if(proc == NULL)
         return NULL_INSTEAD_PTR;
@@ -143,7 +139,7 @@ enum err fill_proc(struct processor* proc, FILE* read, int fsize)
         return CALLOC_ERROR;
     proc->RAM = temp1;
 
-    enum err res = stack_ctor(&proc->cmd_stk, 5);
+    err res = stack_ctor(&proc->cmd_stk, 5);
     if(res != SUCCESS)
         return res;
 
@@ -164,7 +160,7 @@ enum err fill_proc(struct processor* proc, FILE* read, int fsize)
     return SUCCESS;
 }
 
-enum err proc_dump(struct processor* proc, int LINE, const char* proc_name, const char* file_name, const char* func_name)
+err proc_dump(struct processor* proc, int LINE, const char* proc_name, const char* file_name, const char* func_name)
 {
     if(proc == NULL)
         return NULL_INSTEAD_PTR;
@@ -208,7 +204,7 @@ enum err proc_dump(struct processor* proc, int LINE, const char* proc_name, cons
     return SUCCESS;
 }
 
-enum err proc_free(struct processor* proc)
+err proc_free(struct processor* proc)
 {
     if(proc == NULL)
         return NULL_INSTEAD_PTR;

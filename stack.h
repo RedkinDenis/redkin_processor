@@ -1,7 +1,7 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include "err_codes.h"
+#include "C:\Users\vp717\Desktop\ilab\err_codes.h"
 #include "DSL.h"
 
 typedef float elem_t;

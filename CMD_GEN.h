@@ -5,6 +5,9 @@ CMD_GEN("add", ADD,
 },
 {
     MATH_COMM(ADD, +)
+},
+{
+
 })
 
 CMD_GEN("sub", SUB,
@@ -14,6 +17,9 @@ CMD_GEN("sub", SUB,
 },
 {
     MATH_COMM(SUB, -)
+},
+{
+
 })
 
 CMD_GEN("div", DIV,
@@ -23,6 +29,9 @@ CMD_GEN("div", DIV,
 },
 {
     MATH_COMM(DIV, /)
+},
+{
+
 })
 
 CMD_GEN("mul", MUL,
@@ -32,6 +41,9 @@ CMD_GEN("mul", MUL,
 },
 {
     MATH_COMM(MUL, *)
+},
+{
+
 })
 
 CMD_GEN("jb", JB,
@@ -40,6 +52,9 @@ CMD_GEN("jb", JB,
 },
 {
     PROC_JUMPS(JB, >)
+},
+{
+    DISASSM_JUMPS()
 })
 
 CMD_GEN("jbe", JBE,
@@ -48,6 +63,9 @@ CMD_GEN("jbe", JBE,
 },
 {
     PROC_JUMPS(JBE, >=)
+},
+{
+    DISASSM_JUMPS()
 })
 
 CMD_GEN("ja", JA,
@@ -56,6 +74,9 @@ CMD_GEN("ja", JA,
 },
 {
     PROC_JUMPS(JA, <)
+},
+{
+    DISASSM_JUMPS()
 })
 
 CMD_GEN("jae", JAE,
@@ -64,6 +85,9 @@ CMD_GEN("jae", JAE,
 },
 {
     PROC_JUMPS(JAE, <=)
+},
+{
+    DISASSM_JUMPS()
 })
 
 CMD_GEN("je", JE,
@@ -72,6 +96,9 @@ CMD_GEN("je", JE,
 },
 {
     PROC_JUMPS(JE, ==)
+},
+{
+    DISASSM_JUMPS()
 })
 
 CMD_GEN("jne", JNE,
@@ -80,6 +107,9 @@ CMD_GEN("jne", JNE,
 },
 {
     PROC_JUMPS(JNE, !=)
+},
+{
+    DISASSM_JUMPS()
 })
 
 
@@ -156,6 +186,64 @@ CMD_GEN("push", PUSH,
                 proc->ip += (command + number);
             }
         }
+},
+{
+    if (cmd == PUSH)
+    {
+        memcpy(&num, data + ptr, sizeof(int));
+        fprintf(out, " %d", num);
+        ptr += number;
+    }
+    else if (cmd == RPUSH)
+    {
+        switch(data[ptr])
+        {
+            case ax:
+                fprintf(out, " ax");
+                break;
+            case bx:
+                fprintf(out, " bx");
+                break;
+            case cx:
+                fprintf(out, " cx");
+                break;
+            case dx:
+                fprintf(out, " dx");
+                break;
+            default:
+                return UNKNOWN_REGISTER_NAME;
+        }
+
+        ptr += reg;
+    }
+    else if (cmd == RAMPUSH)
+    {
+        memcpy(&num, data + ptr, sizeof(int));
+        fprintf(out, " [%d]", num);
+        ptr += number;
+    }
+    else if (cmd == RAMPUSHR)
+    {
+        switch(data[ptr])
+        {
+            case ax:
+                fprintf(out, " [ax]");
+                break;
+            case bx:
+                fprintf(out, " [bx]");
+                break;
+            case cx:
+                fprintf(out, " [cx]");
+                break;
+            case dx:
+                fprintf(out, " [dx]");
+                break;
+            default:
+                return UNKNOWN_REGISTER_NAME;
+        }
+
+        ptr += reg;
+    }
 })
 
 CMD_GEN("pop", (POP & 0x1F),
@@ -211,6 +299,58 @@ CMD_GEN("pop", (POP & 0x1F),
             POP(cmd_stk, proc->RAM[(int)proc->reg[(int)proc->data[proc->ip + command] - 1]]);
             proc->ip += (command + reg);
         }
+},
+{
+    if (cmd == POP)
+    {
+        switch(data[ptr])
+        {
+            case ax:
+                fprintf(out, " ax");
+                break;
+            case bx:
+                fprintf(out, " bx");
+                break;
+            case cx:
+                fprintf(out, " cx");
+                break;
+            case dx:
+                fprintf(out, " dx");
+                break;
+            default:
+                return UNKNOWN_REGISTER_NAME;
+        }
+
+        ptr += reg;
+    }
+    else if (cmd == RAMPOP)
+    {
+        memcpy(&num, data + ptr, sizeof(int));
+        fprintf(out, " [%d]", num);
+        ptr += number;
+    }
+    else if (cmd == RAMRPOP)
+    {
+        switch(data[ptr])
+        {
+            case ax:
+                fprintf(out, " [ax]");
+                break;
+            case bx:
+                fprintf(out, " [bx]");
+                break;
+            case cx:
+                fprintf(out, " [cx]");
+                break;
+            case dx:
+                fprintf(out, " [dx]");
+                break;
+            default:
+                return UNKNOWN_REGISTER_NAME;
+        }
+
+        ptr += reg;
+    }
 })
 
 CMD_GEN("out", OUT,
@@ -222,6 +362,9 @@ CMD_GEN("out", OUT,
     POP(cmd_stk, x)
     proc->ip += command;
     printf("\nOUT - %f\n", x);
+},
+{
+
 })
 
 CMD_GEN("sqrt", SQRT,
@@ -234,6 +377,9 @@ CMD_GEN("sqrt", SQRT,
     x = (elem_t)sqrt(x);
     proc->ip += command;
     PUSH(cmd_stk, x)
+},
+{
+
 })
 
 CMD_GEN("in", IN,
@@ -246,6 +392,9 @@ CMD_GEN("in", IN,
     scanf("%d", &x);
     PUSH(cmd_stk, x)
     proc->ip += command;
+},
+{
+
 })
 
 CMD_GEN("hlt", HLT,
@@ -257,6 +406,9 @@ CMD_GEN("hlt", HLT,
     stack_dtor(&(proc->cmd_stk));
     proc->ip += command;
     running = 0;
+},
+{
+
 })
 
 CMD_GEN("outc", OUTC,
@@ -269,6 +421,9 @@ CMD_GEN("outc", OUTC,
     liter = (int)temp;
     proc->ip += command;
     printf("%c", liter);
+},
+{
+
 })
 
 CMD_GEN("call", CALL,
@@ -285,6 +440,9 @@ CMD_GEN("call", CALL,
     x = proc->ip + command + number;
     PUSH(call_stk, x)
     memcpy(&proc->ip, &proc->data[proc->ip + command], sizeof(int));
+},
+{
+    DISASSM_JUMPS()
 })
 
 CMD_GEN("ret", RET,
@@ -295,6 +453,9 @@ CMD_GEN("ret", RET,
 {
     POP(call_stk, temp)
     proc->ip = (int)temp;
+},
+{
+
 })
 
 CMD_GEN("jump", JMP,
@@ -309,5 +470,8 @@ CMD_GEN("jump", JMP,
 },
 {
     memcpy(&proc->ip, &proc->data[proc->ip + command], sizeof(int));
+},
+{
+    DISASSM_JUMPS()
 })
 

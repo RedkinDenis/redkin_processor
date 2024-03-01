@@ -7,20 +7,13 @@
 
 #include "input_output.h"
 #include "encoding.h"
-#include "err_codes.h"
+#include "C:\Users\vp717\Desktop\ilab\err_codes.h"
 #include "stack.h"
 #include "DSL.h"
 
 enum err assembler(FILE* out, struct line* data, int nLines);
 
 enum byte_codes comm_det(const char* comm);
-
-enum step
-{
-    command = sizeof(char),
-    number = sizeof(elem_t),
-    reg = sizeof(char)
-};
 
 #define MARK_QUANTITY 20
 
@@ -146,7 +139,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
     {
 
         comm = comm_det(data[i].str);
-        if(comm == ADD || comm == SUB || comm == MUL || comm == DIV || comm == HLT || comm == OUT || comm == RET || comm == OUTC || comm == SQRT)
+        if(comm == ADD || comm == SUB || comm == MUL || comm == DIV || comm == HLT || comm == OUT || comm == RET || comm == OUTC || comm == SQRT || comm == IN)
             ptr += command;
 
         else if(comm == ERR)
@@ -176,9 +169,9 @@ enum err assembler(FILE* out, struct line* data, int nLines)
 
         switch(comm & 0x1F)
         {
-            #define CMD_GEN(str, NAME, assm_code, proc_code) \
-            case NAME:                                       \
-                assm_code                                    \
+            #define CMD_GEN(str, NAME, assm_code, proc_code, dis_code)  \
+            case NAME:                                                  \
+                assm_code                                               \
                 break;
             #include "CMD_GEN.h"
 

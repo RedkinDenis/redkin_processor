@@ -1,3 +1,13 @@
+#ifndef DSL_H
+#define DSL_H
+
+enum step
+{
+    command = sizeof(char),
+    number = 4,
+    reg = sizeof(char)
+};
+
 #define POP(stk_type, reg)                     \
     res = stack_pop(&(proc->stk_type), &buf);  \
     if(res != SUCCESS)                         \
@@ -63,9 +73,17 @@
     else                                                                 \
         proc->ip += (command + number);
 
+#define DISASSM_JUMPS()                     \
+    memcpy(&num, data + ptr, sizeof(int));  \
+    fprintf(out, " %d", num);               \
+    ptr += number;
+
 #define MATH_COMM(enum, operand) \
     POP(cmd_stk, x1)             \
     POP(cmd_stk, x2)             \
     x = x2 operand x1;           \
     proc->ip += command;         \
     PUSH(cmd_stk, x)
+
+
+#endif //DSL_H
