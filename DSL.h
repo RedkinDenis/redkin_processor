@@ -85,5 +85,27 @@ enum step
     proc->ip += command;         \
     PUSH(cmd_stk, x)
 
+#define CHECK_PTR(ptr)           \
+    if (ptr == NULL)             \
+        return NULL_INSTEAD_PTR; \
+
+//void* temp = 0;
+#define CALLOC(elem, type, size)        \
+    temp = calloc(size, sizeof(type));  \
+    if (temp == NULL)                   \
+        return CALLOC_ERROR;            \
+    elem = (type*)temp;
+
+//void* temp = 0;
+#define REALLOC(elem, type, size)                           \
+    temp = realloc(stk->data, size * sizeof(elem_t));       \
+    if(temp == NULL)                                        \
+        return REALLOC_ERROR;                               \
+    stk->data = (type*)temp;
+
+#define FOPEN(var, name, mode)             \
+    FILE* var = fopen(inpName, mode);      \
+        if(var == NULL)                    \
+            return FOPEN_ERROR;
 
 #endif //DSL_H

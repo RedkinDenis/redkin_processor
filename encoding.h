@@ -11,7 +11,7 @@ enum byte_codes
     HLT = 19,                 // 1
     DIV = 5,                  // 1
     MUL = 6,                  // 1
-    IN = 7,                   // 2
+    IN = 7,                   // 1
     RPUSH = 65,               // 2
     RAMPUSH = 33,             // 2
     RAMPUSHR = 161,           // 2

@@ -1,27 +1,4 @@
-#include <string.h>
-#include <stdio.h>
-#include <malloc.h>
-#include <assert.h>
-#include <ctype.h>
-#include <stdint.h>
-
-#include "input_output.h"
-#include "encoding.h"
-#include "C:\Users\vp717\Desktop\ilab\err_codes.h"
-#include "stack.h"
-#include "DSL.h"
-
-enum err assembler(FILE* out, struct line* data, int nLines);
-
-enum byte_codes comm_det(const char* comm);
-
-#define MARK_QUANTITY 20
-
-struct mark
-{
-    int num = 0;
-    int adress = 0;
-};
+#include "assembler.h"
 
 int main(int argc, char* argv[])
 {
@@ -38,9 +15,7 @@ int main(int argc, char* argv[])
         inpName = argv[1];
     }
 
-    FILE* read = fopen(inpName, "rb");
-    if(read == NULL)
-        return OPEN_ERROR;
+    FOPEN(read, inpName, "rb")
 
     int fsize = GetFileSize(read);
 
@@ -48,9 +23,7 @@ int main(int argc, char* argv[])
 
     InputData(&data, read, fsize);
 
-    FILE* out = fopen(outName, "wb");
-    if(out == NULL)
-        return OPEN_ERROR;
+    FOPEN(out, outName, "wb")
 
     fclose(read);
 
@@ -79,7 +52,7 @@ enum byte_codes comm_det(const char* comm)
 enum byte_codes reg_det(const char* reg)
 {
     #define Define_Command(str, enum) \
-    if(strncmp(reg, str, 2) == 0)    \
+    if(strncmp(reg, str, 2) == 0)     \
         return enum;
     #include "registers.h"
     #undef Define_Command
@@ -89,8 +62,8 @@ enum byte_codes reg_det(const char* reg)
 
 enum err assembler(FILE* out, struct line* data, int nLines)
 {
-    if(out == NULL || data == NULL)
-        return NULL_INSTEAD_PTR;
+    CHECK_PTR(out)
+    CHECK_PTR(data)
 
     int comm = 0;
     int num = 0;
@@ -98,7 +71,6 @@ enum err assembler(FILE* out, struct line* data, int nLines)
     int len = nLines;
 
     int ptr = 0;
-
 
     for(int i = 0; i < nLines; i++)
     {
@@ -128,12 +100,16 @@ enum err assembler(FILE* out, struct line* data, int nLines)
         }
     }
 
+    void* temp = 0;
 
-    struct mark* marks = (struct mark*)calloc(MARK_QUANTITY, sizeof(struct mark));
+    struct mark* marks = 0;
+    CALLOC(marks, struct mark, MARK_QUANTITY)
+
     int marks_len = 0;
     int n = 0;
 
-    char* buffer = (char*)calloc(len * 4, sizeof(char));
+    char* buffer = 0;
+    CALLOC(buffer, char, len * 4)
 
     for(int i = 0; i < nLines; i++)
     {

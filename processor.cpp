@@ -1,51 +1,8 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <assert.h>
-#include <stdint.h>
-#include <math.h>
-
-#include "input_output.h"
-#include "encoding.h"
-#include "C:\Users\vp717\Desktop\ilab\err_codes.h"
-#include "DSL.h"
-#include "stack.h"
-
-struct processor
-{
-    char* data = {};
-    int data_size;
-    int ip = 0;
-    elem_t* reg = 0;   //registers ax, bx, cx, dx
-    elem_t* RAM = 0;
-    struct Stack cmd_stk = {};
-    struct Stack call_stk = {};
-};
-
-
-
-err fill_proc(struct processor* proc, FILE* read, int fsize);
-
-err executor(struct processor* proc);
-
-err proc_dump(struct processor* proc, int LINE, const char* proc_name, const char* file_name, const char* func_name);
-
-err proc(struct processor* cmd_stk);
-
-err proc_free(struct processor* proc);
+#include "processor.h"
 
 int main(int argc, char* argv[])
 {
     err res;
-   /* res = (err)system("ass.exe qadr.txt qadr.bin");
-
-    if(res != SUCCESS)
-    {
-        printf("\nerror number %d in ass.exe\n", res);
-        return res;
-    }
-*/
 
     PRINT_(START)
 
@@ -55,13 +12,7 @@ int main(int argc, char* argv[])
     if(argc == 2)
         inpName = argv[1];
 
-    FILE* read = fopen(inpName, "rb");
-
-    if(read == NULL)
-    {
-        printf("\nread file open error\n");
-        return 0;
-    }
+    FOPEN(read, inpName, "rb")
 
     int fsize = GetFileSize(read) / sizeof(char);
 
@@ -73,7 +24,7 @@ int main(int argc, char* argv[])
     res = proc(&processor);
     check_result(proc)
 
-    proc_free(&processor);
+    res = proc_free(&processor);
     check_result(proc_free)
 
     return SUCCESS;
@@ -81,13 +32,11 @@ int main(int argc, char* argv[])
 
 err executor(struct processor* proc)
 {
-    elem_t x = 0, x1 = 0, x2 = 0;
+    elem_t x = 0, x1 = 0, x2 = 0, buf = 0, temp = 0;
     char cmd = 0;
-    int liter;
-    elem_t buf = 0;
-    err res;
 
-    elem_t temp = 0;
+    int liter = 0;
+    err res;
 
     int running = 1;
 
@@ -126,18 +75,14 @@ err proc(struct processor* proc)
 
 err fill_proc(struct processor* proc, FILE* read, int fsize)
 {
-    if(proc == NULL)
-        return NULL_INSTEAD_PTR;
+    CHECK_PTR(proc)
+    CHECK_PTR(read)
 
-    char* temp = (char*)calloc(fsize + 1, sizeof(char));
-    if(temp == NULL)
-        return CALLOC_ERROR;
-    proc->data = temp;
+    void* temp = 0;
 
-    elem_t* temp1 = (elem_t*)calloc(100, sizeof(elem_t));
-    if(temp1 == NULL)
-        return CALLOC_ERROR;
-    proc->RAM = temp1;
+    CALLOC(proc->data, char, fsize + 1)
+
+    CALLOC(proc->RAM, elem_t, 100)
 
     err res = stack_ctor(&proc->cmd_stk, 5);
     if(res != SUCCESS)
@@ -147,10 +92,7 @@ err fill_proc(struct processor* proc, FILE* read, int fsize)
     if(res != SUCCESS)
         return res;
 
-    temp1 = (elem_t*)calloc(4, sizeof(elem_t));
-    if(temp1 == NULL)
-        return CALLOC_ERROR;
-    proc->reg = temp1;
+    CALLOC(proc->reg, elem_t, 4)
 
     int x = fread(proc->data, sizeof(char), fsize, read);
 
@@ -162,8 +104,10 @@ err fill_proc(struct processor* proc, FILE* read, int fsize)
 
 err proc_dump(struct processor* proc, int LINE, const char* proc_name, const char* file_name, const char* func_name)
 {
-    if(proc == NULL)
-        return NULL_INSTEAD_PTR;
+    CHECK_PTR(proc)
+    CHECK_PTR(proc_name)
+    CHECK_PTR(file_name)
+    CHECK_PTR(func_name)
 
     printf("\n------PROCESSOR-------");
     printf("\n------DUMP_BEGIN------\n");
@@ -206,8 +150,7 @@ err proc_dump(struct processor* proc, int LINE, const char* proc_name, const cha
 
 err proc_free(struct processor* proc)
 {
-    if(proc == NULL)
-        return NULL_INSTEAD_PTR;
+    CHECK_PTR(proc)
 
     free(proc->data);
     free(proc->RAM);

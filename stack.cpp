@@ -1,12 +1,12 @@
-#include <string.h>
-#include <stdio.h>
-#include <malloc.h>
-#include <assert.h>
-
 #include "stack.h"
 
-void stack_dump(struct Stack* stk, int LINE, const char* stk_name, const char* file_name, const char* func_name)
+err stack_dump(struct Stack* stk, int LINE, const char* stk_name, const char* file_name, const char* func_name)
 {
+    CHECK_PTR(stk)
+    CHECK_PTR(stk_name)
+    CHECK_PTR(file_name)
+    CHECK_PTR(func_name)
+
     printf("--------STACK---------");
     printf("\n------DUMP_BEGIN------\n");
     printf("\nstack name: %s\n", stk_name);
@@ -22,21 +22,19 @@ void stack_dump(struct Stack* stk, int LINE, const char* stk_name, const char* f
         printf("*[%d] = poison  ", i);
 
     printf("\n-------DUMP_END-------\n\n");
+
+    return SUCCESS;
 }
 
-enum err stack_ctor(struct Stack* stk, size_t capacity)
+err stack_ctor(struct Stack* stk, size_t capacity)
 {
-    if(stk == NULL)
-        return NULL_INSTEAD_PTR;
+    CHECK_PTR(stk)
 
     if(stk->capacity != 0 && stk->capacity != (size_t)-1)
         return STACK_ALREDY_CREATED;
 
-    assert(capacity > 0);
-    elem_t* temp = (elem_t*)calloc(capacity, sizeof(elem_t));
-    if(temp == NULL)
-        return CALLOC_ERROR;
-    stk->data = temp;
+    void* temp = 0;
+    CALLOC(stk->data, elem_t, capacity)
 
     stk->capacity = capacity;
     stk->size = 0;
@@ -44,12 +42,12 @@ enum err stack_ctor(struct Stack* stk, size_t capacity)
     return SUCCESS;
 }
 
-enum err stack_push(struct Stack* stk, const elem_t* x)
+err stack_push(struct Stack* stk, const elem_t* x)
 {
-    if(stk == NULL)
-        return NULL_INSTEAD_PTR;
+    CHECK_PTR(stk)
+    CHECK_PTR(x)
 
-    enum err res = capacity_up(stk);
+    err res = capacity_up(stk);
     if(res != SUCCESS)
         return res;
 
@@ -58,10 +56,9 @@ enum err stack_push(struct Stack* stk, const elem_t* x)
     return SUCCESS;
 }
 
-enum err stack_pop(struct Stack* stk, elem_t* pop_el)
+err stack_pop(struct Stack* stk, elem_t* pop_el)
 {
-    if(stk == NULL)
-        return NULL_INSTEAD_PTR;
+    CHECK_PTR(stk)
 
     if(stk->size <= 0)
         return STK_EMPTY;
@@ -73,17 +70,16 @@ enum err stack_pop(struct Stack* stk, elem_t* pop_el)
 
     *(stk->data + stk->size) = poison;
 
-    enum err res = capacity_down(stk);
+    err res = capacity_down(stk);
     if(res != SUCCESS)
         return res;
 
     return SUCCESS;
 }
 
-enum err stack_dtor(struct Stack* stk)
+err stack_dtor(struct Stack* stk)
 {
-    if(stk == NULL)
-        return NULL_INSTEAD_PTR;
+    CHECK_PTR(stk)
 
     free(stk->data);
     stk->data = NULL;
@@ -92,33 +88,25 @@ enum err stack_dtor(struct Stack* stk)
 
     return SUCCESS;
 }
-enum err capacity_down(struct Stack* stk)
+err capacity_down(struct Stack* stk)
 {
-    if(stk == NULL)
-        return NULL_INSTEAD_PTR;
+    CHECK_PTR(stk)
 
     if(stk->capacity < 2 ||
        stk->capacity / 4 < stk->size)
         return SUCCESS;
 
-    void* temp = realloc(stk->data, stk->capacity / 2);
-
-    if(temp == NULL)
-    {
-        return REALLOC_ERROR;
-    }
+    void* temp = 0;
+    REALLOC(stk->data, elem_t, stk->capacity / 2)
 
     stk->capacity /= 2;
-
-    stk->data = (elem_t*)temp;
 
     return SUCCESS;
 }
 
-enum err capacity_up(struct Stack* stk)
+err capacity_up(struct Stack* stk)
 {
-    if(stk == NULL)
-        return NULL_INSTEAD_PTR;
+    CHECK_PTR(stk)
 
     if(stk->size != stk->capacity)
         return SUCCESS;
@@ -129,14 +117,9 @@ enum err capacity_up(struct Stack* stk)
     else
         expander = stk->capacity;
 
-    void* temp = realloc(stk->data, stk->capacity + expander);
+    void* temp = 0;
+    REALLOC(stk_data, elem_t, (stk->capacity + expander))
 
-    if(temp == NULL)
-    {
-        return REALLOC_ERROR;
-    }
-
-    stk->data = (elem_t*)temp;
     stk->capacity += expander;
     return SUCCESS;
 }

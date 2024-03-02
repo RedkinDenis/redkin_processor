@@ -1,16 +1,4 @@
-#include <string.h>
-#include <stdio.h>
-#include <malloc.h>
-#include <assert.h>
-
-#include "input_output.h"
-#include "encoding.h"
-#include "DSL.h"
-#include "C:\Users\vp717\Desktop\ilab\err_codes.h"
-
-err fill_data(char** data, FILE* read, int fsize);
-
-err dis_assembler(FILE* out, int fsize, char* data);
+#include "disass.h"
 
 int main(int argc, char* argv[])
 {
@@ -27,44 +15,31 @@ int main(int argc, char* argv[])
         inpName = argv[1];
     }
 
-    FILE* read = fopen(inpName, "rb");
-    if(read == NULL)
-    {
-        printf("read file open error");
-        return 0;
-    }
+    FOPEN(read, inpName, "rb")
 
     int fsize = GetFileSize(read);
 
     char* data = 0;
     fill_data(&data, read, fsize);
 
-
-
-    FILE* out = fopen(outName, "wb");
-    if(out == NULL)
-    {
-        printf("out file open error");
-        return 0;
-    }
+    FOPEN(out, outName, "wb")
 
     fclose(read);
 
     dis_assembler(out, fsize, data);
 
     fclose(out);
+
+    free(data);
 }
 
 err fill_data(char** data, FILE* read, int fsize)
 {
-    if (data == NULL || read == NULL)
-        return NULL_INSTEAD_PTR;
+    CHECK_PTR(data)
+    CHECK_PTR(read)
 
-    char* data_temp = (char*)calloc(fsize + 1, sizeof(char));
-    if (data_temp == NULL)
-        return CALLOC_ERROR;
-
-    *data = data_temp;
+    void* temp = 0;
+    CALLOC(*data, char, fsize + 1)
 
     int x = fread(*data, sizeof(char), fsize, read);
 
@@ -75,8 +50,8 @@ err fill_data(char** data, FILE* read, int fsize)
 
 err dis_assembler(FILE* out, int fsize, char* data)
 {
-    if (data == NULL || data == NULL)
-        return NULL_INSTEAD_PTR;
+    CHECK_PTR(out)
+    CHECK_PTR(data)
 
     int ptr = 0;
     char cmd = data[ptr];
