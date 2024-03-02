@@ -104,7 +104,7 @@ enum step
     stk->data = (type*)temp;
 
 #define FOPEN(var, name, mode)             \
-    FILE* var = fopen(inpName, mode);      \
+    FILE* var = fopen(name, mode);         \
         if(var == NULL)                    \
             return FOPEN_ERROR;
 
