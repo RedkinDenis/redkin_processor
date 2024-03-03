@@ -10,9 +10,11 @@
 
 #include "input_output.h"
 #include "encoding.h"
-#include "C:\Users\vp717\Desktop\ilab\err_codes.h"
+#include "..\..\err_codes.h"
 #include "stack.h"
 #include "DSL.h"
+
+void check_arguments(int argc, char* argv[], char* inpName, char* outName);
 
 enum err assembler(FILE* out, struct line* data, int nLines);
 

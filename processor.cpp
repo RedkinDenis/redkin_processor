@@ -6,11 +6,9 @@ int main(int argc, char* argv[])
 
     PRINT_(START)
 
-
     char* inpName = (char*)"qadr.bin";
 
-    if(argc == 2)
-        inpName = argv[1];
+    check_arguments(argc, argv, inpName);
 
     FOPEN(read, inpName, "rb")
 
@@ -28,6 +26,14 @@ int main(int argc, char* argv[])
     check_result(proc_free)
 
     return SUCCESS;
+}
+
+void check_arguments(int argc, char* argv[], char* inpName)
+{
+    if(argc == 2)
+    {
+        inpName = argv[1];
+    }
 }
 
 err executor(struct processor* proc)
@@ -67,22 +73,21 @@ err executor(struct processor* proc)
 
 err proc(struct processor* proc)
 {
-    if(proc == NULL)
-        return NULL_INSTEAD_PTR;
+    CHECK_PTR(proc);
 
     return executor(proc);
 }
 
 err fill_proc(struct processor* proc, FILE* read, int fsize)
 {
-    CHECK_PTR(proc)
-    CHECK_PTR(read)
+    CHECK_PTR(proc);
+    CHECK_PTR(read);
 
     void* temp = 0;
 
-    CALLOC(proc->data, char, fsize + 1)
+    CALLOC(proc->data, char, fsize + 1);
 
-    CALLOC(proc->RAM, elem_t, 100)
+    CALLOC(proc->RAM, elem_t, 100);
 
     err res = stack_ctor(&proc->cmd_stk, 5);
     if(res != SUCCESS)
@@ -92,7 +97,7 @@ err fill_proc(struct processor* proc, FILE* read, int fsize)
     if(res != SUCCESS)
         return res;
 
-    CALLOC(proc->reg, elem_t, 4)
+    CALLOC(proc->reg, elem_t, 4);
 
     int x = fread(proc->data, sizeof(char), fsize, read);
 
@@ -104,10 +109,10 @@ err fill_proc(struct processor* proc, FILE* read, int fsize)
 
 err proc_dump(struct processor* proc, int LINE, const char* proc_name, const char* file_name, const char* func_name)
 {
-    CHECK_PTR(proc)
-    CHECK_PTR(proc_name)
-    CHECK_PTR(file_name)
-    CHECK_PTR(func_name)
+    CHECK_PTR(proc);
+    CHECK_PTR(proc_name);
+    CHECK_PTR(file_name);
+    CHECK_PTR(func_name);
 
     printf("\n------PROCESSOR-------");
     printf("\n------DUMP_BEGIN------\n");
@@ -150,7 +155,7 @@ err proc_dump(struct processor* proc, int LINE, const char* proc_name, const cha
 
 err proc_free(struct processor* proc)
 {
-    CHECK_PTR(proc)
+    CHECK_PTR(proc);
 
     free(proc->data);
     free(proc->RAM);

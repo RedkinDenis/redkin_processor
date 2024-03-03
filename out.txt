@@ -1,0 +1,129 @@
+push 1
+pop ax
+push 2
+pop bx
+push 1
+pop cx
+push ax
+push 0
+jne 62
+push bx
+push 0
+jne 68
+push cx
+push 0
+jne 77
+jump 83
+call 109
+hlt
+call 221
+push dx
+out
+hlt
+call 235
+hlt
+call 290
+hlt
+push bx
+push bx
+mul
+push 4
+push ax
+push cx
+mul
+mul
+sub
+pop dx
+ret
+call 89
+push dx
+push 0
+jb 169
+push dx
+push 0
+je 150
+push dx
+push 0
+ja 175
+push 0
+push bx
+sub
+push 2
+push ax
+mul
+div
+out
+ret
+call 235
+ret
+push 0
+push bx
+sub
+push dx
+sqrt
+sub
+push ax
+push 2
+mul
+div
+out
+push 0
+push bx
+sub
+push dx
+sqrt
+add
+push ax
+push 2
+mul
+div
+out
+ret
+ret
+push 0
+push cx
+sub
+push bx
+div
+pop dx
+ret
+push 10
+push 115
+push 116
+push 111
+push 111
+push 114
+push 32
+push 111
+push 78
+outc
+outc
+outc
+outc
+outc
+outc
+outc
+outc
+outc
+ret
+push 10
+push 115
+push 116
+push 111
+push 111
+push 114
+push 32
+push 102
+push 110
+push 73
+outc
+outc
+outc
+outc
+outc
+outc
+outc
+outc
+outc
+outc
+ret

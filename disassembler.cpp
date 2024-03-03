@@ -5,15 +5,7 @@ int main(int argc, char* argv[])
     char* inpName = (char*)"qadr.bin";
     char* outName = (char*)"out.txt";
 
-    if(argc == 3)
-    {
-        inpName = argv[1];
-        outName = argv[2];
-    }
-    else if(argc == 2)
-    {
-        inpName = argv[1];
-    }
+    check_arguments(argc, argv, inpName, outName);
 
     FOPEN(read, inpName, "rb")
 
@@ -33,13 +25,25 @@ int main(int argc, char* argv[])
     free(data);
 }
 
+void check_arguments(int argc, char* argv[], char* inpName, char* outName)
+{
+    if(argc == 3)
+    {
+        inpName = argv[1];
+        outName = argv[2];
+    }
+    else if(argc == 2)
+    {
+        inpName = argv[1];
+    }
+}
+
 err fill_data(char** data, FILE* read, int fsize)
 {
-    CHECK_PTR(data)
-    CHECK_PTR(read)
+    CHECK_PTR(data);
+    CHECK_PTR(read);
 
-    void* temp = 0;
-    CALLOC(*data, char, fsize + 1)
+    CALLOC(*data, char, fsize + 1);
 
     int x = fread(*data, sizeof(char), fsize, read);
 
@@ -50,8 +54,8 @@ err fill_data(char** data, FILE* read, int fsize)
 
 err dis_assembler(FILE* out, int fsize, char* data)
 {
-    CHECK_PTR(out)
-    CHECK_PTR(data)
+    CHECK_PTR(out);
+    CHECK_PTR(data);
 
     int ptr = 0;
     char cmd = data[ptr];

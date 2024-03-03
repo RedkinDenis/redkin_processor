@@ -26,7 +26,7 @@ struct processor
     struct Stack call_stk = {};
 };
 
-
+void check_arguments(int argc, char* argv[], char* inpName);
 
 err fill_proc(struct processor* proc, FILE* read, int fsize);
 

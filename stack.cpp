@@ -2,10 +2,10 @@
 
 err stack_dump(struct Stack* stk, int LINE, const char* stk_name, const char* file_name, const char* func_name)
 {
-    CHECK_PTR(stk)
-    CHECK_PTR(stk_name)
-    CHECK_PTR(file_name)
-    CHECK_PTR(func_name)
+    CHECK_PTR(stk);
+    CHECK_PTR(stk_name);
+    CHECK_PTR(file_name);
+    CHECK_PTR(func_name);
 
     printf("--------STACK---------");
     printf("\n------DUMP_BEGIN------\n");
@@ -28,13 +28,13 @@ err stack_dump(struct Stack* stk, int LINE, const char* stk_name, const char* fi
 
 err stack_ctor(struct Stack* stk, size_t capacity)
 {
-    CHECK_PTR(stk)
+    CHECK_PTR(stk);
 
     if(stk->capacity != 0 && stk->capacity != (size_t)-1)
         return STACK_ALREDY_CREATED;
 
     void* temp = 0;
-    CALLOC(stk->data, elem_t, capacity)
+    CALLOC(stk->data, elem_t, capacity);
 
     stk->capacity = capacity;
     stk->size = 0;
@@ -44,8 +44,8 @@ err stack_ctor(struct Stack* stk, size_t capacity)
 
 err stack_push(struct Stack* stk, const elem_t* x)
 {
-    CHECK_PTR(stk)
-    CHECK_PTR(x)
+    CHECK_PTR(stk);
+    CHECK_PTR(x);
 
     err res = capacity_up(stk);
     if(res != SUCCESS)
@@ -58,7 +58,7 @@ err stack_push(struct Stack* stk, const elem_t* x)
 
 err stack_pop(struct Stack* stk, elem_t* pop_el)
 {
-    CHECK_PTR(stk)
+    CHECK_PTR(stk);
 
     if(stk->size <= 0)
         return STK_EMPTY;
@@ -79,7 +79,7 @@ err stack_pop(struct Stack* stk, elem_t* pop_el)
 
 err stack_dtor(struct Stack* stk)
 {
-    CHECK_PTR(stk)
+    CHECK_PTR(stk);
 
     free(stk->data);
     stk->data = NULL;
@@ -90,14 +90,13 @@ err stack_dtor(struct Stack* stk)
 }
 err capacity_down(struct Stack* stk)
 {
-    CHECK_PTR(stk)
+    CHECK_PTR(stk);
 
     if(stk->capacity < 2 ||
        stk->capacity / 4 < stk->size)
         return SUCCESS;
 
-    void* temp = 0;
-    REALLOC(stk->data, elem_t, stk->capacity / 2)
+    REALLOC(stk->data, elem_t, stk->capacity / 2);
 
     stk->capacity /= 2;
 
@@ -106,7 +105,7 @@ err capacity_down(struct Stack* stk)
 
 err capacity_up(struct Stack* stk)
 {
-    CHECK_PTR(stk)
+    CHECK_PTR(stk);
 
     if(stk->size != stk->capacity)
         return SUCCESS;
@@ -117,8 +116,7 @@ err capacity_up(struct Stack* stk)
     else
         expander = stk->capacity;
 
-    void* temp = 0;
-    REALLOC(stk_data, elem_t, (stk->capacity + expander))
+    REALLOC(stk_data, elem_t, (stk->capacity + expander));
 
     stk->capacity += expander;
     return SUCCESS;

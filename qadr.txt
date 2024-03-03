@@ -1,6 +1,8 @@
-push 3
-pop ax
+push 1
 push 5
+out 5          $обработать лишние символы
+pop ax
+push 2
 pop bx
 push 1
 pop cx

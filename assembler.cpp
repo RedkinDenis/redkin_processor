@@ -5,15 +5,7 @@ int main(int argc, char* argv[])
     char* inpName = (char*)"word_code1.txt";
     char* outName = (char*)"word_code1.bin";
 
-    if(argc == 3)
-    {
-        inpName = argv[1];
-        outName = argv[2];
-    }
-    else if(argc == 2)
-    {
-        inpName = argv[1];
-    }
+    check_arguments(argc, argv, inpName, outName);
 
     FOPEN(read, inpName, "rb")
 
@@ -23,9 +15,9 @@ int main(int argc, char* argv[])
 
     InputData(&data, read, fsize);
 
-    FOPEN(out, outName, "wb")
-
     fclose(read);
+
+    FOPEN(out, outName, "wb")
 
     enum err res = assembler(out, data.lines, data.nLines);
     if(res != SUCCESS)
@@ -38,32 +30,45 @@ int main(int argc, char* argv[])
     return SUCCESS;
 }
 
+void check_arguments(int argc, char* argv[], char* inpName, char* outName)
+{
+    if(argc == 3)
+    {
+        inpName = argv[1];
+        outName = argv[2];
+    }
+    else if(argc == 2)
+    {
+        inpName = argv[1];
+    }
+}
+
 enum byte_codes comm_det(const char* comm)
 {
-    #define Define_Command(str, enum) \
+#define Define_Command(str, enum)     \
     if(strcmp(comm, str) == 0)        \
         return enum;
-    #include "command.h"
-    #undef Define_Command
+#include "command.h"
+#undef Define_Command
 
     return ERR;
 }
 
 enum byte_codes reg_det(const char* reg)
 {
-    #define Define_Command(str, enum) \
+#define Define_Command(str, enum)     \
     if(strncmp(reg, str, 2) == 0)     \
         return enum;
-    #include "registers.h"
-    #undef Define_Command
+#include "registers.h"
+#undef Define_Command
 
     return ERR;
 }
 
 enum err assembler(FILE* out, struct line* data, int nLines)
 {
-    CHECK_PTR(out)
-    CHECK_PTR(data)
+    CHECK_PTR(out);
+    CHECK_PTR(data);
 
     int comm = 0;
     int num = 0;
@@ -103,13 +108,13 @@ enum err assembler(FILE* out, struct line* data, int nLines)
     void* temp = 0;
 
     struct mark* marks = 0;
-    CALLOC(marks, struct mark, MARK_QUANTITY)
+    CALLOC(marks, struct mark, MARK_QUANTITY);
 
     int marks_len = 0;
     int n = 0;
 
     char* buffer = 0;
-    CALLOC(buffer, char, len * 4)
+    CALLOC(buffer, char, len * 4);
 
     for(int i = 0; i < nLines; i++)
     {
