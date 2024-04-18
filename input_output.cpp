@@ -21,7 +21,7 @@ void DataFree(struct file* data)
     data->nLines = 0;
 }
 
-struct line* InputData(struct file* Data, FILE* fp, int fsize)
+void InputData(struct file* Data, FILE* fp, int fsize)
 {
     char* buffer = (char*)calloc(fsize + 1, sizeof(char));
     int nLines = 0;
@@ -93,7 +93,7 @@ void clear_tabs(struct line* data, int nLines)
     for(int i = 0; i < nLines; i++)
         while(data[i].str[0] == ' ')
         {
-            data[i].str = '\0';
+            data[i].str[0] = '\0';
             data[i].str++;
         }
 }

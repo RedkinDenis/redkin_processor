@@ -1,10 +1,22 @@
 #include "processor.h"
 
+static void check_arguments(int argc, char* argv[], char* inpName);
+
+static err fill_proc(struct processor* proc, FILE* read, int fsize);
+
+static err executor(struct processor* proc);
+
+static err proc_dump(struct processor* proc, int LINE, const char* proc_name, const char* file_name, const char* func_name);
+
+static err proc(struct processor* cmd_stk);
+
+static err proc_free(struct processor* proc);
+
 int main(int argc, char* argv[])
 {
     err res;
 
-    PRINT_(START)
+    PRINT_START
 
     char* inpName = (char*)"qadr.bin";
 

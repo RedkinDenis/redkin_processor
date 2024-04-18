@@ -20,7 +20,7 @@ void DataFree(struct file* data);
 
 int GetFileSize(FILE* fp);
 
-struct line* InputData(struct file* data, FILE* fp, int fsize);
+void InputData(struct file* data, FILE* fp, int fsize);
 
 void PrintData(struct line* data, int data_size);
 

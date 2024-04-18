@@ -26,16 +26,4 @@ struct processor
     struct Stack call_stk = {};
 };
 
-void check_arguments(int argc, char* argv[], char* inpName);
-
-err fill_proc(struct processor* proc, FILE* read, int fsize);
-
-err executor(struct processor* proc);
-
-err proc_dump(struct processor* proc, int LINE, const char* proc_name, const char* file_name, const char* func_name);
-
-err proc(struct processor* cmd_stk);
-
-err proc_free(struct processor* proc);
-
 #endif //PROCESSOR_H
