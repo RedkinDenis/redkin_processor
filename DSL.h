@@ -8,13 +8,13 @@ enum step
     reg = sizeof(char)
 };
 
-#define POP(stk_type, reg)                     \
+#define STPOP(stk_type, reg)                     \
     res = stack_pop(&(proc->stk_type), &buf);  \
     if(res != SUCCESS)                         \
        return res;                             \
     memcpy(&reg, &buf, sizeof(elem_t));
 
-#define PUSH(stk_type, reg)                    \
+#define STPUSH(stk_type, reg)                    \
     temp = (elem_t)reg;                        \
     memcpy(&buf, &temp, sizeof(elem_t));       \
     res = stack_push(&(proc->stk_type), &buf); \
@@ -53,7 +53,7 @@ enum step
 
 #define STACK_DUMP(stk, func_name) stack_dump(&stk, __LINE__, GET_VARIABLE_NAME(stk), __FILE__, GET_VARIABLE_NAME(func_name));
 
-#define PRINT_(START)                                                                                   \
+#define PRINT_START                                                                                   \
     printf("-------------------------------------------------------------------------------------\n");  \
     printf("-----------------------------------START_OF_PROGRAMM---------------------------------\n");  \
     printf("-------------------------------------------------------------------------------------\n");
@@ -66,8 +66,8 @@ enum step
     ptr += number;
 
 #define PROC_JUMPS(enum, operand)                                        \
-    POP(cmd_stk, x1)                                                     \
-    POP(cmd_stk, x2)                                                     \
+    STPOP(cmd_stk, x1)                                                     \
+    STPOP(cmd_stk, x2)                                                     \
     if(x1 operand x2)                                                    \
         memcpy(&proc->ip, &proc->data[proc->ip + command], sizeof(int)); \
     else                                                                 \
@@ -79,11 +79,11 @@ enum step
     ptr += number;
 
 #define MATH_COMM(enum, operand) \
-    POP(cmd_stk, x1)             \
-    POP(cmd_stk, x2)             \
+    STPOP(cmd_stk, x1)             \
+    STPOP(cmd_stk, x2)             \
     x = x2 operand x1;           \
     proc->ip += command;         \
-    PUSH(cmd_stk, x)
+    STPUSH(cmd_stk, x)
 
 #define CHECK_PTR(ptr)           \
     do                           \
@@ -115,5 +115,41 @@ enum step
     FILE* var = fopen(name, mode);         \
         if(var == NULL)                    \
             return FOPEN_ERROR;
+
+
+#define PUSH_POP_DET(name, type1, type2, type3)                                                \
+    do                                                                                          \
+    {                                                                                           \
+        size_t name_len = strlen(name) + 1;                                                     \
+        if(*(data[i].str + name_len) == '[' && strchr(data[i].str + name_len, ']') != NULL)     \
+        if(isdigit(*(data[i].str + name_len + strlen("["))))                                    \
+        {                                                                                       \
+            sscanf(data[i].str + name_len, "[%d]", &num);                                       \
+            buffer[ptr] = type1;                                                                \
+        }                                                                                       \
+        else if(*(data[i].str + name_len + strlen("[a")) == 'x')                                \
+        {                                                                                       \
+            buffer[ptr] = type2;                                                                \
+                                                                                                \
+            num = reg_det(data[i].str + name_len);                                              \
+                                                                                                \
+            ptr += command;                                                                     \
+            memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(char));                       \
+            ptr += reg;                                                                         \
+            break;                                                                              \
+        }                                                                                       \
+        if(*(data[i].str + name_len + strlen("a")) == 'x')                                      \
+        {                                                                                       \
+            buffer[ptr] = type3;                                                                \
+                                                                                                \
+            num = reg_det(data[i].str + name_len);                                              \
+                                                                                                \
+            ptr += command;                                                                     \
+            memcpy(buffer + ptr * sizeof(buffer[0]), &num, sizeof(char));                       \
+            ptr += reg;                                                                         \
+            break;                                                                              \
+        }                                                                                       \
+    } while (0)                                                                
+    
 
 #endif //DSL_H

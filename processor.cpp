@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 
     PRINT_START
 
-    char* inpName = (char*)"qadr.bin";
+    char* inpName = (char*)"word_code1.bin";
 
     check_arguments(argc, argv, inpName);
 

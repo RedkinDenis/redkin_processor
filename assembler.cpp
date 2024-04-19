@@ -7,25 +7,24 @@ int main(int argc, char* argv[])
 
     check_arguments(argc, argv, inpName, outName);
 
-    FOPEN(read, inpName, "rb")
+    FILE* read = fopen(inpName, "rb");
 
     int fsize = GetFileSize(read);
-
-    struct file data = {};
-
-    InputData(&data, read, fsize);
+    struct Data data = input_data(read);
+    // dump_data(&data);
 
     fclose(read);
 
-    FOPEN(out, outName, "wb")
+    FILE* out = fopen(outName, "wb");
 
-    enum err res = assembler(out, data.lines, data.nLines);
+    enum err res = assembler(out, data.lines, data.quant);
     if(res != SUCCESS)
         return res;
 
-    DataFree(&data);
+    // printf(" END ");
+    // clear_data(&data);
 
-    fclose(out);
+    // fclose(out);
 
     return SUCCESS;
 }
@@ -159,7 +158,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
             case ERR:
                 if(strchr(data[i].str, ':') != NULL || strchr(data[i].str, '$') != NULL || strlen(data[i].str) == 0)
                     break;
-                //printf("%d", comm);
+                printf("line %d: %s\n", i, data[i].str);
                 return UNKNOWN_COMMAND_NAME;
         }
     }

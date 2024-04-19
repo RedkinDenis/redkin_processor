@@ -4,6 +4,10 @@
 #include <assert.h>
 
 #include "input_output.h"
+#include "../../err_codes.h"
+#include "DSL.h"
+
+static err fill_buffer (FILE* read, char** buf);
 
 int GetFileSize(FILE* fp)
 {
@@ -14,78 +18,18 @@ int GetFileSize(FILE* fp)
     return fsize;
 }
 
-void DataFree(struct file* data)
+err fill_buffer (FILE* read, char** buf)
 {
-    free(data->buffer);
-    free(data->lines);
-    data->nLines = 0;
-}
+    CHECK_PTR(read);
+    CHECK_PTR(buf);
 
-void InputData(struct file* Data, FILE* fp, int fsize)
-{
-    char* buffer = (char*)calloc(fsize + 1, sizeof(char));
-    int nLines = 0;
-    Data->buffer = buffer;
+    int fsize = GetFileSize(read);
 
-    int rsize = fread(buffer, sizeof(char), fsize, fp);
-    assert(rsize == fsize);
+    CALLOC(*buf, char, (fsize + 1));
 
-    if(buffer[rsize - 1] != '\n')
-        buffer[rsize] = '\n';
-    else
-        buffer[rsize] = '\0';
+    fread(*buf, sizeof(char), fsize, read);
 
-    for(int i = 0; i < rsize + 1; i++)
-    {
-        if(buffer[i] == '\r')
-        {
-            buffer[i] = '\0';
-            i += 1;
-            buffer[i] = '\0';
-            nLines++;
-        }
-        else if(buffer[i] == '\n')
-        {
-            nLines++;
-            buffer[i] = '\0';
-        }
-    }
-
-/*    printf("nLines - %d\n", nLines);*/
-    struct line* data = (struct line*)calloc(nLines, sizeof(struct line));
-
-    int j = 0;
-    int oldind = 0;
-
-    data[j].str = buffer;
-    j++;
-    for(int i = 0; i < rsize + 1; i++)
-    {
-        if(buffer[i] == '\0')
-        {
-            if(j <= nLines)
-            {
-                data[j].str = buffer + i + 1;
-                data[j - 1].len = i - oldind;
-                oldind = i + 1;
-
-                if(buffer[i + 1] == '\0')
-                {
-                    data[j].str++;
-                    i++;
-                    oldind++;
-                }
-                j++;
-            }
-        }
-    }
-    /*for(int i = 0; i < nLines; i++)
-    {
-        printf("%d - %d\n", i, data[i].len);
-    }*/
-
-    Data->nLines = nLines;
-    Data->lines = data;
+    return SUCCESS;
 }
 
 void clear_tabs(struct line* data, int nLines)
@@ -98,16 +42,66 @@ void clear_tabs(struct line* data, int nLines)
         }
 }
 
-void PrintData(struct line* data, int data_size)
+Data input_data (FILE* input)
 {
-    printf("----Print_Data----");
-    for(int i = 0; i < data_size; i++)
-        puts(data[i].str);
-    printf("--------end-------");
+    int fsize = GetFileSize(input);
+
+    char* buffer = NULL;
+    fill_buffer(input, &buffer);
+
+    char* buffer_cp = buffer;
+
+    // printf ("Buffer: \n%s\n end of buffer\n", buffer);
+
+    Data data = {};
+
+    for (int i = 0; i < fsize + 1; i++)
+        if (buffer[i] == '\r' && buffer[i - 1] == '\n')
+                data.quant -= 1;
+
+    for (int i = 0; i < fsize + 1; i++)
+    {
+        if (buffer[i] == '\n' && buffer[i - 1] == '\r')
+        {
+            data.quant += 1;
+            buffer[i] = '\0';
+            buffer[i - 1] = '\0';
+        }
+    }
+
+    data.lines = (line*)calloc(data.quant, sizeof(line));
+
+    if (buffer[fsize - 1] != '\n')
+        data.quant += 1;
+
+    for (int i = 0; i < data.quant; i++)
+    {
+        // printf("%d - %s\n", i, buffer);
+        data.lines[i].str = strdup(buffer);
+        data.lines[i].len = strlen(buffer);
+        buffer += strlen(buffer);
+
+        while (*buffer == '\0') 
+            buffer++;
+    }
+
+    free(buffer_cp);
+
+    return data;
 }
 
-void DataOut(FILE* fp, struct line* data, int nLines)
+void clear_data (Data* data)
 {
-    for(int i = 0; i < nLines; i++)
-        fprintf(fp, "%s\n", data[i].str);
+    for (int i = 0; i < data->quant; i++)
+        free(data->lines[i].str);
+
+    free(data->lines);
+    free(data);
+}
+
+void dump_data (Data* data)
+{
+    printf ("qant - %d \n", data->quant);
+    for (int i = 0; i < data->quant; i++)
+        printf("%s: len = %d \n", data->lines[i].str, data->lines[i].len);
 }

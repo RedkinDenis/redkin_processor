@@ -1,30 +1,27 @@
 #ifndef INPUT_OTPUT_H
 #define INPUT_OTPUT_H
 
-struct line
+struct line 
 {
-    size_t len;
-    char* str;
+    char* str = NULL;
+    size_t len = 0;
 };
 
-struct file
+struct Data 
 {
-    char* buffer;
-    struct line* lines;
-    int nLines = 0;
+    line* lines = NULL;
+    size_t quant = 0;
 };
 
 void clear_tabs(struct line* data, int nLines);
 
-void DataFree(struct file* data);
+Data input_data (FILE* input);
+
+void dump_data (Data* data);
+
+void clear_data (Data* data);
 
 int GetFileSize(FILE* fp);
-
-void InputData(struct file* data, FILE* fp, int fsize);
-
-void PrintData(struct line* data, int data_size);
-
-void DataOut(FILE* fp, struct line* data, int nLines);
 
 #endif // INPUT_OTPUT_H
 
