@@ -10,7 +10,7 @@
 
 #include "input_output.h"
 #include "encoding.h"
-#include "..\..\err_codes.h"
+#include "..\..\..\err_codes.h"
 #include "stack.h"
 #include "DSL.h"
 

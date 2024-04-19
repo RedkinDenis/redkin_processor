@@ -1,4 +1,4 @@
-#include "stack.h"
+#include "headers/stack.h"
 
 err stack_dump(struct Stack* stk, int LINE, const char* stk_name, const char* file_name, const char* func_name)
 {

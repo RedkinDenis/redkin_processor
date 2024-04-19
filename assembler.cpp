@@ -1,4 +1,4 @@
-#include "assembler.h"
+#include "headers/assembler.h"
 
 int main(int argc, char* argv[])
 {
@@ -47,7 +47,7 @@ enum byte_codes comm_det(const char* comm)
 #define Define_Command(str, enum)     \
     if(strcmp(comm, str) == 0)        \
         return enum;
-#include "command.h"
+#include "headers/command.h"
 #undef Define_Command
 
     return ERR;
@@ -58,7 +58,7 @@ enum byte_codes reg_det(const char* reg)
 #define Define_Command(str, enum)     \
     if(strncmp(reg, str, 2) == 0)     \
         return enum;
-#include "registers.h"
+#include "headers/registers.h"
 #undef Define_Command
 
     return ERR;
@@ -153,7 +153,7 @@ enum err assembler(FILE* out, struct line* data, int nLines)
             case NAME:                                                  \
                 assm_code                                               \
                 break;
-            #include "CMD_GEN.h"
+            #include "headers/CMD_GEN.h"
 
             case ERR:
                 if(strchr(data[i].str, ':') != NULL || strchr(data[i].str, '$') != NULL || strlen(data[i].str) == 0)

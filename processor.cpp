@@ -1,4 +1,4 @@
-#include "processor.h"
+#include "headers/processor.h"
 
 static void check_arguments(int argc, char* argv[], char* inpName);
 
@@ -70,7 +70,7 @@ err executor(struct processor* proc)
             case NAME:                                                 \
                 proc_code                                              \
                 break;
-            #include "CMD_GEN.h"
+            #include "headers/CMD_GEN.h"
 
             default:
                 return UNKNOWN_COMMAND_NAME;

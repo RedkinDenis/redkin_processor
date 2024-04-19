@@ -3,9 +3,9 @@
 #include <malloc.h>
 #include <assert.h>
 
-#include "input_output.h"
+#include "headers/input_output.h"
 #include "../../err_codes.h"
-#include "DSL.h"
+#include "headers/DSL.h"
 
 static err fill_buffer (FILE* read, char** buf);
 
